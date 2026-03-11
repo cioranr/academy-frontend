@@ -187,7 +187,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f8fafc' }}>
                     {(form as Record<string, unknown>)[key] ? (
                       <img
-                        src={String((form as Record<string, unknown>)[key]).startsWith('/storage/') ? `http://localhost:8000${(form as Record<string, unknown>)[key]}` : String((form as Record<string, unknown>)[key])}
+                        src={storageUrl(String((form as Record<string, unknown>)[key])) ?? String((form as Record<string, unknown>)[key])}
                         alt="Preview"
                         style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }}
                       />
