@@ -3,25 +3,18 @@
 import { useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { storageUrl } from '@/lib/api'
+import type { BackendEvent } from '@/types'
 
-interface SlideItem {
-  image: string
-  title: string
-  href: string
-}
+const FALLBACK_ITEMS = [
+  { image: '/slide1.png', title: 'Monitorizarea ritmului inimii 24h', href: '/calendar' },
+  { image: '/slide2.png', title: 'Implantare stimulator', href: '/calendar' },
+  { image: '/slide3.jpeg', title: 'Ce este Monza Ares Help?', href: '/calendar' },
+]
 
 interface EventsCarouselProps {
-  items?: SlideItem[]
+  events?: BackendEvent[]
 }
-
-const defaultItems: SlideItem[] = [
-  { image: '/slide1.png', title: 'Monitorizarea ritmului inimii 24h', href: '/monitorizarea-ritmului-inimii' },
-  { image: '/slide2.png', title: 'Implantare stimulator', href: '/implantare-stimulator' },
-  { image: '/slide3.jpeg', title: 'Ce este Monza Ares Help?', href: '/monza-ares-help' },
-  { image: '/slide1.png', title: 'Monitorizarea ritmului inimii 24h', href: '/monitorizarea-ritmului-inimii' },
-  { image: '/slide2.png', title: 'Implantare stimulator', href: '/implantare-stimulator' },
-  { image: '/slide3.jpeg', title: 'Ce este Monza Ares Help?', href: '/monza-ares-help' },
-]
 
 function ArrowIcon() {
   return (
@@ -31,30 +24,30 @@ function ArrowIcon() {
   )
 }
 
-export function EventsCarousel({ items = defaultItems }: EventsCarouselProps) {
+export function EventsCarousel({ events }: EventsCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null)
+  const SLIDE_WIDTH = 338 + 30
 
-  const SLIDE_WIDTH = 338 + 30 // width + gap
-
-  function scrollPrev() {
-    trackRef.current?.scrollBy({ left: -SLIDE_WIDTH, behavior: 'smooth' })
-  }
-
-  function scrollNext() {
-    trackRef.current?.scrollBy({ left: SLIDE_WIDTH, behavior: 'smooth' })
-  }
+  const slides = events && events.length > 0
+    ? events.map(ev => ({
+        image: storageUrl(ev.image_small ?? ev.image) ?? '/slide1.png',
+        title: ev.title,
+        date: ev.date ? new Date(ev.date).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
+        href: `/events/${ev.slug}`,
+      }))
+    : FALLBACK_ITEMS.map(i => ({ ...i, date: '' }))
 
   return (
     <section className="w-full py-10 bg-white">
       <div className="max-w-[1200px] mx-auto px-[120px] relative">
-        {/* Titlu */}
-    <h2 className="text-center pb-5" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '28px', color: '#000', marginBottom: '24px' }}>
-     Vezi următoarele conferințe și workshopuri programate
-    </h2>
 
-        {/* Buton Prev */}
+        <h2 className="text-center pb-5" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '28px', color: '#000', marginBottom: '24px' }}>
+          Vezi următoarele conferințe și workshopuri programate
+        </h2>
+
+        {/* Prev */}
         <button
-          onClick={scrollPrev}
+          onClick={() => trackRef.current?.scrollBy({ left: -SLIDE_WIDTH, behavior: 'smooth' })}
           aria-label="Previous slide"
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center"
           style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}
@@ -70,31 +63,35 @@ export function EventsCarousel({ items = defaultItems }: EventsCarouselProps) {
           className="flex gap-[30px] overflow-x-auto"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollSnapType: 'x mandatory' }}
         >
-          {items.map((item, i) => (
+          {slides.map((item, i) => (
             <div key={i} className="flex-shrink-0" style={{ width: '300px', height: '400px', scrollSnapAlign: 'start' }}>
               <div className="flex flex-col h-full" style={{ background: '#f5f5f5' }}>
-
-                <div className="relative overflow-hidden" style={{ height: '320px' }}>
-                  <Image src={item.image} alt={item.title} fill quality={75} className="object-cover object-top" sizes="338px" />
+                <div className="relative overflow-hidden" style={{ height: '300px' }}>
+                  <Image src={item.image} alt={item.title} fill quality={75} className="object-cover object-top" sizes="150px" unoptimized={item.image.startsWith('http')} />
                 </div>
-
-                <div className="p-5" style={{ height: '122px', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-  <h2 style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '22px', color: '#000', margin: 0, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-    {item.title}
-  </h2>
-  <Link href={item.href} className="flex justify-start ml-1">
-    <ArrowIcon />
-  </Link>
-</div>
-
+                <div className="p-5" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <h2 style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '18px', color: '#000', margin: '0 0 4px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                      {item.title}
+                    </h2>
+                    {item.date && (
+                      <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '12px', color: '#6D6E71', margin: 0 }}>
+                        {item.date}
+                      </p>
+                    )}
+                  </div>
+                  <Link href={item.href} className="flex justify-start ml-1">
+                    <ArrowIcon />
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Buton Next */}
+        {/* Next */}
         <button
-          onClick={scrollNext}
+          onClick={() => trackRef.current?.scrollBy({ left: SLIDE_WIDTH, behavior: 'smooth' })}
           aria-label="Next slide"
           className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center"
           style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}
@@ -104,18 +101,17 @@ export function EventsCarousel({ items = defaultItems }: EventsCarouselProps) {
           </svg>
         </button>
 
-        {/* Mobile butoane */}
+        {/* Mobile */}
         <div className="flex md:hidden justify-center gap-4 mt-4">
-          <button onClick={scrollPrev} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent' }}>
+          <button onClick={() => trackRef.current?.scrollBy({ left: -SLIDE_WIDTH, behavior: 'smooth' })} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" /></svg>
           </button>
-          <button onClick={scrollNext} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent' }}>
+          <button onClick={() => trackRef.current?.scrollBy({ left: SLIDE_WIDTH, behavior: 'smooth' })} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" /></svg>
           </button>
         </div>
 
       </div>
-
       <style>{`div::-webkit-scrollbar { display: none; }`}</style>
     </section>
   )

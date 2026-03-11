@@ -3,26 +3,28 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { InscriereForm } from '@/components/sections/InscriereForm'
-
+import { storageUrl } from '@/lib/api'
+import type { BackendEvent } from '@/types'
 
 interface FeaturedWorkshopProps {
-  description?: string
-  date?: string
-  month?: string
-  emcPoints?: number
-  deviceImage?: string
-  taviImage?: string
+  event?: BackendEvent | null
 }
 
-export function FeaturedWorkshop({
-  description = 'ABORDARE AVANSATĂ ȘI OPTIMIZAREA REZULTATELOR,\nDE LA ANATOMIE LA IMPLANTARE',
-  date = '31',
-  month = 'OCTOMBRIE',
-  emcPoints = 6,
-  deviceImage = '/device-tavi.png',
-  taviImage = '/tavi-word.png',
-}: FeaturedWorkshopProps) {
+export function FeaturedWorkshop({ event }: FeaturedWorkshopProps) {
   const [formOpen, setFormOpen] = useState(false)
+
+  // Derive display values from event, fall back to defaults
+  const date       = event?.date ? new Date(event.date).getDate().toString() : '31'
+  const month      = event?.date
+    ? new Date(event.date).toLocaleDateString('ro-RO', { month: 'long' }).toUpperCase()
+    : 'OCTOMBRIE'
+  const emcPoints  = event?.credits ?? 6
+  const subtitle   = event?.subtitle ?? 'ABORDARE AVANSATĂ ȘI OPTIMIZAREA REZULTATELOR,\nDE LA ANATOMIE LA IMPLANTARE'
+  const location   = event?.location ?? 'CENTRUL DE TRAINING'
+  const venue      = event?.venue ?? 'SPITALUL MONZA'
+  const eventSlug    = event?.slug ?? 'workshop-interactiv-tavi'
+  const creditsLabel = event?.credits_label ?? `CURS CREDITAT CU ${emcPoints} PUNCTE EMC`
+  const imageUrl     = storageUrl(event?.image)
 
   return (
     <section className="relative z-10 pb-10 bg-white w-full">
@@ -36,26 +38,28 @@ export function FeaturedWorkshop({
           >
 
             {/* Workshop */}
-            <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 400, fontSize: '155px', color: '#065EA6', lineHeight: 1, letterSpacing: '-3px', display: 'flex', justifyContent: 'end' }}>
+            <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: '155px', color: '#065EA6', lineHeight: 1, letterSpacing: '-3px', display: 'flex', justifyContent: 'end' }}>
               Workshop
             </div>
 
-            {/* Interactiv + TAVI */}
-            <div className="flex items-center gap-4 mb-4 ml-2 ">
-              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: '115px', color: '#065EA6', lineHeight: 1 }}>
+            {/* Interactiv + subtitle keyword */}
+            <div className="flex items-center gap-4 mb-4 ml-2">
+              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: '115px', color: '#065EA6', lineHeight: 1, letterSpacing: '-6px' }}>
                 Interactiv
               </span>
-              <span className=" " style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 700, fontSize: '115px', color: '#065EA6', lineHeight: 1 }}>
-                TAVI
-              </span>
+              {event?.title && (
+                <span style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 600, fontSize: 'clamp(40px, 8vw, 115px)', color: '#065EA6', lineHeight: 1 }}>
+                  {event.title}
+                </span>
+              )}
             </div>
 
             {/* Separator */}
             <div className="border-t border-[#065EA6] mb-4" />
 
             {/* Descriere */}
-            <p className="text-center mb-6" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '24px', color: '#065EA6', lineHeight: 1.5 }}>
-              {description.split('\n').map((line, i, arr) => (
+            <p className="text-center mb-6" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '24px', color: '#065EA6', lineHeight: 1.5, textTransform: 'uppercase' }}>
+              {subtitle.split('\n').map((line, i, arr) => (
                 <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
               ))}
             </p>
@@ -64,50 +68,58 @@ export function FeaturedWorkshop({
             <div className="flex items-center gap-4">
 
               {/* 1 — albastru */}
-              <div className="flex-1 flex items-center justify-center text-center" style={{ background: '#065EA6', height: '150px' }}>
+              <div className="flex-1 flex items-center justify-center text-left px-4" style={{ background: '#065EA6', height: '150px' }}>
                 <div>
-                  <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 700, fontSize: '22px', color: '#fff', lineHeight: 1.5, textTransform: 'uppercase' }}>
-                    CENTRUL<br />DE TRAINING
+                  <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '22px', color: '#fff', lineHeight: 1, textTransform: 'uppercase' }}>
+                    {location}
                   </p>
-                  <div style={{ borderTop: '1px solid #ffffff', margin: '4px 0' }} />
-                  <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '16px', color: '#fff', marginTop: '5px', textTransform: 'uppercase' }}>
-                    SPITALUL MONZA
+                  <div style={{ borderTop: '2px solid #ffffff' }} />
+                  <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '16px', color: '#fff', marginTop: '5px', textTransform: 'uppercase' }}>
+                    {venue}
                   </p>
                 </div>
               </div>
 
               {/* 2 — alb, data */}
-              <div className="flex-1 flex flex-col items-center justify-center text-center" style={{ background: '#ffffff', height: '150px' }}>
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 700, fontSize: '46px', color: '#065EA6', lineHeight: 1 }}>
+              <div className="flex-1 flex flex-col items-center justify-center text-center px-4" style={{ background: '#ffffff', height: '150px' }}>
+                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '46px', color: '#065EA6', lineHeight: 1 }}>
                   {date}
                 </p>
-                <div style={{ borderTop: '1px solid #065EA6', margin: '4px 0', width: '70%' }} />
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '15px', color: '#065EA6', letterSpacing: '0.08em', marginTop: '2px' }}>
+                <div style={{ borderTop: '2px solid #065EA6', width: '70%' }} />
+                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '15px', color: '#065EA6', letterSpacing: '0.08em', marginTop: '2px' }}>
                   {month}
                 </p>
               </div>
 
               {/* 3 — alb, EMC */}
-              <div className="flex-1 flex flex-col items-center justify-center text-center" style={{ background: '#ffffff', height: '150px' }}>
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 700, fontSize: '46px', color: '#065EA6', lineHeight: 1 }}>
+              <div className="flex-1 flex flex-col items-center justify-center text-center px-4" style={{ background: '#ffffff', height: '150px' }}>
+                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '46px', color: '#065EA6', lineHeight: 1 }}>
                   {emcPoints}
                 </p>
-                <div style={{ borderTop: '1px solid #065EA6', margin: '4px 0', width: '70%' }} />
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '15px', color: '#065EA6', lineHeight: 1.5, marginTop: '2px' }}>
-                  CURS CREDITAT<br />CU {emcPoints} PUNCTE EMC
+                <div style={{ borderTop: '2px solid #065EA6', width: '100%' }} />
+                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '15px', color: '#065EA6', lineHeight: 1, marginTop: '2px', textAlign: 'left' }}>
+                  {creditsLabel}
                 </p>
               </div>
 
               {/* Poza */}
-              <div className="flex-[1.5] flex items-center justify-center">
-                <Image src={deviceImage} alt="Dispozitiv" width={130} height={120} quality={90} className="object-contain" />
+              <div className="flex-[1.5] flex items-center justify-center px-4">
+                <Image
+                  src={imageUrl ?? '/device-tavi.png'}
+                  alt={event?.title ?? 'Dispozitiv'}
+                  width={imageUrl ? 180 : 130}
+                  height={imageUrl ? 96 : 120}
+                  quality={90}
+                  className="object-cover"
+                  unoptimized={!!imageUrl}
+                />
               </div>
 
             </div>
           </div>
         </div>
 
-        {/* Buton + Form — in afara cardului gri */}
+        {/* Buton + Form */}
         <div className="flex flex-col items-center mt-5">
           <a
             onClick={() => setFormOpen(v => !v)}
@@ -120,8 +132,7 @@ export function FeaturedWorkshop({
             </svg>
           </a>
 
-          {/* Form — apare la click */}
-          {formOpen && <InscriereForm />}
+          {formOpen && <InscriereForm eventSlug={eventSlug} />}
         </div>
 
       </div>
