@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
-
+import Image from 'next/image'
 const MENU = [
   { label: 'Sumar', href: '/admin', icon: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z' },
   { label: 'Evenimente', href: '/admin/events', icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01' },
@@ -21,7 +21,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!loading && (!user || (user.role !== 'admin' && user.role !== 'events_manager'))) router.replace('/login')
   }, [user, loading, router])
 
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}><div style={{ color: '#065EA6', fontFamily: '"Roboto",sans-serif', fontWeight: 300 }}>Se încarcă...</div></div>
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', gap: '16px' }}>
+    <svg style={{ animation: 'pulse 1.2s ease-in-out infinite', transformOrigin: 'center' }} width="60" height="56" viewBox="0 0 24 24" fill="#ED3224">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+    <span style={{ color: '#065EA6', fontFamily: '"Roboto",sans-serif', fontWeight: 300, fontSize: '14px', letterSpacing: '0.05em' }}>Se încarcă...</span>
+    <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }`}</style>
+  </div>
   if (!user) return null
 
   const isActive = (href: string) => href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
@@ -31,11 +37,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <aside style={{ width: '240px', background: '#fff', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 100, transform: sidebarOpen ? 'translateX(0)' : undefined, transition: 'transform 0.3s' }} className="hidden md:flex flex-col">
         <div style={{ padding: '1.5rem 1.25rem', borderBottom: '1px solid #e5e7eb' }}>
-          <Link href="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#065EA6', letterSpacing: '0.1em', textTransform: 'uppercase' }}>MONZA ARES</div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#065EA6' }}>Academy Admin</div>
-          </Link>
-        </div>
+  <Link href="/" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'center' }}>
+    <Image src="/logo.svg" alt="Monza Ares Academy" width={80} height={40} quality={90} className='mx-auto' />
+    <div style={{ fontSize: '1.2rem', fontWeight: 300, color: '#6D6E71', letterSpacing: '0.05em', textTransform: 'uppercase', paddingTop:'10px' }}>Admin Panel</div>
+  </Link>
+</div>
         <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {MENU.map(item => (
             <Link key={item.href} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.75rem', borderRadius: '10px', textDecoration: 'none', fontSize: '0.9rem', fontWeight: isActive(item.href) ? 500 : 400, background: isActive(item.href) ? '#ecffff' : 'transparent', color: isActive(item.href) ? '#065EA6' : '#6D6E71', transition: 'all 0.15s' }}>

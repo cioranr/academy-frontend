@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
+import { ConditionalNav } from '@/components/layout/ConditionalNav'
 import { AuthProvider } from '@/lib/auth'
 import './globals.css'
 
@@ -19,9 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ro">
       <body>
         <AuthProvider>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
+          <ConditionalNav>
+            <main>{children}</main>
+          </ConditionalNav>
         </AuthProvider>
       </body>
     </html>

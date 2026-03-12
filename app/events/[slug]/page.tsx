@@ -53,8 +53,24 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   const inp = { width: '100%', padding: '1rem 1.25rem', border: '2px solid #065ea6', borderRadius: '20px', fontSize: '0.95rem', background: 'transparent', outline: 'none', fontFamily: '"Roboto",sans-serif', fontWeight: 300, color: '#000' }
   const sel = { ...inp, appearance: 'none' as const, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23065ea6' d='M1 1L6 6L11 1' stroke='%23065ea6' stroke-width='2'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem center', backgroundSize: '12px', paddingRight: '3rem', cursor: 'pointer' }
 
-  if (loading) return <main style={{ background: '#ecffff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ color: '#065EA6', fontFamily: '"Roboto",sans-serif', fontWeight: 300 }}>Se încarcă...</div></main>
-  if (notFound || !event) return <main style={{ background: '#ecffff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ textAlign: 'center', fontFamily: '"Roboto",sans-serif' }}><h1 style={{ color: '#065EA6', fontWeight: 300 }}>Evenimentul nu a fost găsit</h1><Link href="/calendar" style={{ color: '#065EA6' }}>← Calendar</Link></div></main>
+  if (loading) return (
+    <main style={{ background: '#ecffff', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+      <svg style={{ animation: 'pulse 1.2s ease-in-out infinite', transformOrigin: 'center' }} width="60" height="56" viewBox="0 0 24 24" fill="#ED3224">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+      <span style={{ color: '#065EA6', fontFamily: '"Roboto",sans-serif', fontWeight: 300, fontSize: '14px' }}>Se încarcă...</span>
+      <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }`}</style>
+    </main>
+  )
+
+  if (notFound || !event) return (
+    <main style={{ background: '#ecffff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center', fontFamily: '"Roboto",sans-serif' }}>
+        <h1 style={{ color: '#065EA6', fontWeight: 300 }}>Evenimentul nu a fost găsit</h1>
+        <Link href="/calendar" style={{ color: '#065EA6' }}>← Calendar</Link>
+      </div>
+    </main>
+  )
 
   const date = new Date(event.date)
   const day = date.getDate()
@@ -68,23 +84,25 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
 
   return (
     <main style={{ background: '#ecffff', fontFamily: '"Roboto",sans-serif' }}>
-      {/* Hero */}
+
+      {/* ── HERO ── */}
       <section style={{ background: '#ecffff', paddingTop: '40px', paddingBottom: '60px' }}>
         <div className="max-w-[1000px] mx-auto px-4">
+
           {/* Workshop */}
-          <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: '155px', color: '#065EA6', lineHeight: 1, letterSpacing: '-3px', display: 'flex', justifyContent: 'end' }}>
+          <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: 'clamp(60px, 12vw, 155px)', color: '#065EA6', lineHeight: 1, letterSpacing: '-3px', display: 'flex', justifyContent: 'end' }}>
             Workshop
           </div>
 
-          {/* Interactiv + subtitle keyword */}
-          <div className="flex items-center gap-4 mb-4 ml-2">
-              <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: '115px', color: '#065EA6', lineHeight: 1, letterSpacing: '-6px' }}>
-                Interactiv
+          {/* Interactiv + title */}
+          <div className="flex items-center gap-2 mb-4 ml-2 flex-wrap">
+            <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: 'clamp(40px, 9vw, 115px)', color: '#065EA6', }}>
+              Interactiv
+            </span>
+            {event.title && (
+              <span style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 600, fontSize: 'clamp(40px, 9vw, 115px)', color: '#065EA6',}}>
+                {event.title}
               </span>
-            {event?.title && (
-                <span style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 600, fontSize: 'clamp(40px, 8vw, 115px)', color: '#065EA6', lineHeight: 1 }}>
-                  {event.title}
-                </span>
             )}
           </div>
 
@@ -92,86 +110,94 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
           <div className="border-t border-[#065EA6] mb-4" />
 
           {/* Descriere */}
-          <p className="text-center mb-6" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '24px', color: '#065EA6', lineHeight: 1.5, textTransform: 'uppercase' }}>
+          <p className="text-center mb-6" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: 'clamp(13px, 2.5vw, 24px)', color: '#065EA6', lineHeight: 1.5, textTransform: 'uppercase' }}>
             {subtitle.split('\n').map((line, i, arr) => (
-                <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
             ))}
           </p>
 
-          {/* 3 casute + poza */}
-          <div className="flex items-center gap-4">
-
-            {/* 1 — albastru */}
+          {/* DESKTOP: flex 4 in linie */}
+          <div className="hidden md:flex items-center gap-4">
             <div className="flex-1 flex items-center justify-center text-left px-4" style={{ background: '#065EA6', height: '150px' }}>
               <div>
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '22px', color: '#fff', lineHeight: 1, textTransform: 'uppercase' }}>
-                  {location}
-                </p>
-                <div style={{ borderTop: '2px solid #ffffff' }} />
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '16px', color: '#fff', marginTop: '5px', textTransform: 'uppercase' }}>
-                  {venue}
-                </p>
+                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '22px', color: '#fff', lineHeight: 1, textTransform: 'uppercase', margin: 0 }}>{location}</p>
+                <div style={{ borderTop: '2px solid #ffffff', margin: '4px 0' }} />
+                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '16px', color: '#fff', textTransform: 'uppercase', margin: 0 }}>{venue}</p>
               </div>
             </div>
-
-            {/* 2 — alb, data */}
             <div className="flex-1 flex flex-col items-center justify-center text-center px-4" style={{ background: '#ffffff', height: '150px' }}>
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '46px', color: '#065EA6', lineHeight: 1 }}>
-                {day}
-              </p>
-              <div style={{ borderTop: '2px solid #065EA6', width: '70%' }} />
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '15px', color: '#065EA6', letterSpacing: '0.08em', marginTop: '2px' }}>
-                {month}
-              </p>
+              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '46px', color: '#065EA6', lineHeight: 1, margin: 0 }}>{day}</p>
+              <div style={{ borderTop: '2px solid #065EA6', width: '70%', margin: '4px 0' }} />
+              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '15px', color: '#065EA6', letterSpacing: '0.08em', margin: 0 }}>{month}</p>
             </div>
-
-            {/* 3 — alb, EMC */}
             <div className="flex-1 flex flex-col items-center justify-center text-center px-4" style={{ background: '#ffffff', height: '150px' }}>
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '46px', color: '#065EA6', lineHeight: 1 }}>
-                {emcPoints}
-              </p>
-              <div style={{ borderTop: '2px solid #065EA6', width: '100%' }} />
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '15px', color: '#065EA6', lineHeight: 1, marginTop: '2px', textAlign: 'left' }}>
-                {creditsLabel}
-              </p>
+              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '46px', color: '#065EA6', lineHeight: 1, margin: 0 }}>{emcPoints}</p>
+              <div style={{ borderTop: '2px solid #065EA6', width: '100%', margin: '4px 0' }} />
+              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '15px', color: '#065EA6', lineHeight: 1, margin: 0, textAlign: 'left' }}>{creditsLabel}</p>
             </div>
-
-            {/* Poza */}
             <div className="flex-[1.5] flex items-center justify-center px-4">
-              <Image
-                  src={imageUrl ?? '/device-tavi.png'}
-                  alt={event?.title ?? 'Dispozitiv'}
-                  width={imageUrl ? 180 : 130}
-                  height={imageUrl ? 96 : 120}
-                  quality={90}
-                  className="object-cover"
-                  unoptimized={!!imageUrl}
-              />
+              <Image src={imageUrl ?? '/device-tavi.png'} alt={event.title ?? 'Dispozitiv'} width={imageUrl ? 180 : 130} height={imageUrl ? 96 : 120} quality={90} className="object-cover" unoptimized={!!imageUrl} />
             </div>
           </div>
+
+          {/* MOBILE: grid 2x2 */}
+          <div className="grid grid-cols-2 gap-3 md:hidden">
+            <div className="flex items-center justify-start px-3" style={{ background: '#065EA6', height: '100px' }}>
+              <div>
+                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '13px', color: '#fff', lineHeight: 1.2, textTransform: 'uppercase', margin: 0 }}>{location}</p>
+                <div style={{ borderTop: '2px solid #ffffff', margin: '4px 0' }} />
+                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '11px', color: '#fff', textTransform: 'uppercase', margin: 0 }}>{venue}</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-center justify-center text-center" style={{ background: '#ffffff', height: '100px' }}>
+              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '32px', color: '#065EA6', lineHeight: 1, margin: 0 }}>{day}</p>
+              <div style={{ borderTop: '2px solid #065EA6', width: '60%', margin: '4px 0' }} />
+              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '11px', color: '#065EA6', letterSpacing: '0.08em', margin: 0 }}>{month}</p>
+            </div>
+            <div className="flex flex-col items-center justify-center text-center px-2" style={{ background: '#ffffff', height: '100px' }}>
+              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '32px', color: '#065EA6', lineHeight: 1, margin: 0 }}>{emcPoints}</p>
+              <div style={{ borderTop: '2px solid #065EA6', width: '90%', margin: '4px 0' }} />
+              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '11px', color: '#065EA6', lineHeight: 1.3, margin: 0, textAlign: 'center' }}>{creditsLabel}</p>
+            </div>
+            <div className="flex items-center justify-center" style={{ background: '#F7F7F7', height: '100px' }}>
+              <Image src={imageUrl ?? '/device-tavi.png'} alt={event.title ?? 'Dispozitiv'} width={100} height={90} quality={90} className="object-contain max-h-[85px] w-auto" unoptimized={!!imageUrl} />
+            </div>
+          </div>
+
         </div>
       </section>
 
+      {/* Buton inscriere */}
       <section className="bg-white pt-4">
         <div className="flex justify-center">
-          <a href="#inscriere" className="inline-flex items-center gap-2 text-white rounded-full px-8 py-3 transition-all hover:-translate-y-px" style={{ background: '#065EA6', fontWeight: 300, fontSize: '13px' }}>Înscrie-te aici <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4l5 5 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg></a>
+          <a href="#inscriere" className="inline-flex items-center gap-2 text-white rounded-full px-8 py-3 transition-all hover:-translate-y-px" style={{ background: '#065EA6', fontWeight: 300, fontSize: '13px' }}>
+            Înscrie-te aici
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4l5 5 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </a>
         </div>
       </section>
 
-      {event.description && <section className="bg-white py-16"><div className="max-w-[900px] mx-auto px-4"><p style={{ fontWeight: 300, fontSize: '16px', color: '#000', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{event.description}</p></div></section>}
+      {/* Descriere */}
+      {event.description && (
+        <section className="bg-white py-16">
+          <div className="max-w-[900px] mx-auto px-4">
+            <p style={{ fontWeight: 300, fontSize: '16px', color: '#000', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{event.description}</p>
+          </div>
+        </section>
+      )}
 
       {/* Speakers */}
       {event.speakers && event.speakers.length > 0 && (
         <section className="bg-white py-10">
-          <div className="max-w-[1200px] mx-auto px-[120px] relative">
+          <div className="max-w-[1200px] mx-auto px-4 md:px-[120px] relative">
             <button onClick={() => speakersRef.current?.scrollBy({ left: -(306 + 30), behavior: 'smooth' })} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center" style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round"/></svg>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
             <div ref={speakersRef} className="flex gap-[30px] overflow-x-auto" style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
               {event.speakers.map(sp => <DoctorCard key={sp.id} speaker={sp} />)}
             </div>
             <button onClick={() => speakersRef.current?.scrollBy({ left: 306 + 30, behavior: 'smooth' })} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center" style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round"/></svg>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
           <style>{`div::-webkit-scrollbar{display:none}`}</style>
@@ -201,7 +227,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
         </section>
       )}
 
-      {/* Registration form */}
+      {/* Form inscriere */}
       <section className="bg-white py-12" id="inscriere">
         <div className="max-w-[900px] mx-auto px-4">
           <div style={{ background: 'transparent', padding: '2.5rem 2rem', maxWidth: '700px', margin: '0 auto' }}>
@@ -244,6 +270,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
           </div>
         </div>
       </section>
+
+      <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }`}</style>
     </main>
   )
 }

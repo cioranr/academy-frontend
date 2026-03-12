@@ -80,12 +80,12 @@ export default function TestimonialsAdminPage() {
         <button onClick={() => { setCreating(true); setEditing(null); setForm(EMPTY) }} style={{ padding: '0.6rem 1.25rem', background: '#065EA6', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', fontSize: '0.85rem' }}>+ Testimonial nou</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: list.length || creating ? '1fr 1.4fr' : '1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
         {/* List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {list.map(t => (
-            <div key={t.id} style={{ background: '#fff', borderRadius: '12px', padding: '1rem', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', border: editing?.id === t.id ? '2px solid #065EA6' : '2px solid transparent', cursor: 'pointer' }} onClick={() => openEdit(t)}>
+            <div key={t.id} style={{ background: '#fff', borderRadius: '12px', padding: '1rem', boxShadow: '0 1px 8px rgba(0,0,0,0.06)', border: editing?.id === t.id ? '2px solid #065EA6' : '2px solid transparent', cursor: 'pointer' }} onClick={() => editing?.id === t.id ? (setEditing(null)) : openEdit(t)}>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 {t.image
                   ? <img src={storageUrl(t.image) ?? t.image} alt="" style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />

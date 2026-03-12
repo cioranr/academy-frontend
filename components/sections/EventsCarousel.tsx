@@ -26,7 +26,8 @@ function ArrowIcon() {
 
 export function EventsCarousel({ events }: EventsCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null)
-  const SLIDE_WIDTH = 338 + 30
+  const SLIDE_WIDTH_DESKTOP = 338 + 30
+  const SLIDE_WIDTH_MOBILE  = 280 + 16
 
   const slides = events && events.length > 0
     ? events.map(ev => ({
@@ -37,41 +38,51 @@ export function EventsCarousel({ events }: EventsCarouselProps) {
       }))
     : FALLBACK_ITEMS.map(i => ({ ...i, date: '' }))
 
+  const scrollBy = (dir: 1 | -1) => {
+    const isMobile = window.innerWidth < 768
+    const w = isMobile ? SLIDE_WIDTH_MOBILE : SLIDE_WIDTH_DESKTOP
+    trackRef.current?.scrollBy({ left: dir * w, behavior: 'smooth' })
+  }
+
   return (
     <section className="w-full py-10 bg-white">
-      <div className="max-w-[1200px] mx-auto px-[120px] relative">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-[120px] relative">
 
-        <h2 className="text-center pb-5" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '28px', color: '#000', marginBottom: '24px' }}>
+        <h2 className="text-center pb-5" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: 'clamp(28px, 4vw, 28px)', color: '#000', marginBottom: '24px' }}>
           Vezi următoarele conferințe și workshopuri programate
         </h2>
 
-        {/* Prev */}
+        {/* Prev — desktop */}
         <button
-          onClick={() => trackRef.current?.scrollBy({ left: -SLIDE_WIDTH, behavior: 'smooth' })}
+          onClick={() => scrollBy(-1)}
           aria-label="Previous slide"
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center"
           style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" />
+            <path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 
         {/* Track */}
         <div
           ref={trackRef}
-          className="flex gap-[30px] overflow-x-auto"
+          className="flex gap-4 md:gap-[30px] overflow-x-auto"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', scrollSnapType: 'x mandatory' }}
         >
           {slides.map((item, i) => (
-            <div key={i} className="flex-shrink-0" style={{ width: '300px', height: '400px', scrollSnapAlign: 'start' }}>
+            <div
+              key={i}
+              className="flex-shrink-0 md:mx-0 mx-auto"
+style={{ width: 'clamp(260px, 75vw, 338px)', height: 'clamp(360px, 80vw, 462px)', scrollSnapAlign: 'start' }}
+            >
               <div className="flex flex-col h-full" style={{ background: '#f5f5f5' }}>
-                <div className="relative overflow-hidden" style={{ height: '300px' }}>
-                  <Image src={item.image} alt={item.title} fill quality={75} className="object-cover object-top" sizes="150px" unoptimized={item.image.startsWith('http')} />
+                <div className="relative overflow-hidden" style={{ flex: '0 0 73%' }}>
+                  <Image src={item.image} alt={item.title} fill quality={75} className="object-cover object-top" sizes="338px" unoptimized={item.image.startsWith('http')} />
                 </div>
-                <div className="p-5" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div className="p-4" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    <h2 style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '18px', color: '#000', margin: '0 0 4px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    <h2 style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: 'clamp(14px, 3.5vw, 18px)', color: '#000', margin: '0 0 4px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                       {item.title}
                     </h2>
                     {item.date && (
@@ -89,25 +100,35 @@ export function EventsCarousel({ events }: EventsCarouselProps) {
           ))}
         </div>
 
-        {/* Next */}
+        {/* Next — desktop */}
         <button
-          onClick={() => trackRef.current?.scrollBy({ left: SLIDE_WIDTH, behavior: 'smooth' })}
+          onClick={() => scrollBy(1)}
           aria-label="Next slide"
           className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center"
           style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" />
+            <path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 
-        {/* Mobile */}
-        <div className="flex md:hidden justify-center gap-4 mt-4">
-          <button onClick={() => trackRef.current?.scrollBy({ left: -SLIDE_WIDTH, behavior: 'smooth' })} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent' }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" /></svg>
+        {/* Butoane mobile */}
+        <div className="flex md:hidden justify-center items-center gap-4 mt-6">
+          <button
+            onClick={() => scrollBy(-1)}
+            style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
-          <button onClick={() => trackRef.current?.scrollBy({ left: SLIDE_WIDTH, behavior: 'smooth' })} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent' }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" /></svg>
+          <button
+            onClick={() => scrollBy(1)}
+            style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
         </div>
 
