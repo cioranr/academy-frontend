@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { registerForEvent } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
+import { useRecaptcha } from '@/lib/useRecaptcha'
 
 const SPECIALITATI = [
   { value: 'cardiologie', label: 'Cardiologie' },
@@ -17,6 +18,7 @@ interface Props {
 
 export function InscriereForm({ eventSlug = 'workshop-interactiv-tavi' }: Props) {
   const { user } = useAuth()
+  const { getToken } = useRecaptcha()
   const [formData, setFormData] = useState({
     prenume: user?.first_name || '',
     nume: user?.last_name || '',
@@ -59,6 +61,7 @@ export function InscriereForm({ eventSlug = 'workshop-interactiv-tavi' }: Props)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setLoading(true)
     try {
+      const recaptcha_token = await getToken('event_registration')
       await registerForEvent(eventSlug, {
         first_name: formData.prenume,
         last_name: formData.nume,
@@ -67,6 +70,8 @@ export function InscriereForm({ eventSlug = 'workshop-interactiv-tavi' }: Props)
         specialty: formData.departament,
         professional_grade: formData.specialitate,
         message: formData.mesaj,
+        recaptcha_token,
+        website: '',
       })
       setSuccess(true)
       setFormData({ prenume: '', nume: '', email: '', telefon: '', departament: '', specialitate: '', mesaj: '' })
@@ -83,6 +88,8 @@ export function InscriereForm({ eventSlug = 'workshop-interactiv-tavi' }: Props)
     <div style={{ background: 'transparent', padding: '2.5rem 2rem', maxWidth: '700px', margin: '0 auto' }}>
       <h3 style={{ fontFamily: '"Roboto",sans-serif', fontWeight: 700, fontSize: '1.5rem', color: '#000', marginBottom: '2rem', textAlign: 'center' }}>Înscrie-te</h3>
       {apiError && <div style={{ background: '#fde8e8', color: '#c53030', borderRadius: '12px', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.9rem', fontFamily: '"Roboto",sans-serif' }}>{apiError}</div>}
+      {/* Honeypot — must stay empty */}
+      <input name="website" type="text" tabIndex={-1} autoComplete="off" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }} aria-hidden="true" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <input style={{ ...inputStyle, borderColor: errors.prenume ? '#dc3545' : '#065ea6' }} placeholder="Prenume *" value={formData.prenume} onChange={e => setFormData(p => ({ ...p, prenume: e.target.value }))} />

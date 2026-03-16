@@ -30,6 +30,7 @@ export interface BackendEvent {
   credits_label: string | null; image: string | null; image_small: string | null; image_big: string | null
   status: 'draft' | 'published' | 'cancelled'; max_participants: number | null
   created_by: number | null; created_at: string; updated_at: string
+  meta_title: string | null; meta_description: string | null; schema_org: string | null
   speakers?: EventSpeaker[]; sessions?: EventSession[]; directors?: EventSpeaker[]
 }
 export interface Doctor {

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { getMyRegistrations, getUserDegrees, downloadDegree, updateProfile } from '@/lib/api'
 import type { EventRegistration, Degree } from '@/types'
+import { addToCalendar } from '@/lib/calendar'
 
 const ROLE_LABELS: Record<string, string> = { participant: 'Participant', doctor: 'Medic', admin: 'Administrator', events_manager: 'Manager Evenimente' }
 const STATUS_COLORS: Record<string, string> = { pending: '#f59e0b', approved: '#10b981', rejected: '#ef4444', cancelled: '#6b7280' }
@@ -160,9 +161,17 @@ export default function DashboardPage() {
                       {reg.event?.date && <p style={{ margin: '0 0 0.25rem', fontSize: '0.85rem', color: '#6D6E71', fontWeight: 300 }}>{new Date(reg.event.date).toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' })}</p>}
                       {reg.event?.location && <p style={{ margin: 0, fontSize: '0.85rem', color: '#6D6E71', fontWeight: 300 }}>{reg.event.location}{reg.event.venue ? ` — ${reg.event.venue}` : ''}</p>}
                     </div>
-                    <span style={{ background: STATUS_COLORS[reg.status] + '20', color: STATUS_COLORS[reg.status], borderRadius: '20px', padding: '0.3rem 0.85rem', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                      {STATUS_LABELS[reg.status]}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      {reg.event && (
+                        <button onClick={() => addToCalendar(reg.event!)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.85rem', background: '#ecffff', border: '1px solid #065EA6', borderRadius: '20px', color: '#065EA6', fontSize: '0.8rem', fontWeight: 400, cursor: 'pointer', fontFamily: '"Roboto",sans-serif', whiteSpace: 'nowrap' }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
+                          Adaugă în calendar
+                        </button>
+                      )}
+                      <span style={{ background: STATUS_COLORS[reg.status] + '20', color: STATUS_COLORS[reg.status], borderRadius: '20px', padding: '0.3rem 0.85rem', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                        {STATUS_LABELS[reg.status]}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -33,8 +33,11 @@ export default function LoginPage() {
           <div style={{ marginBottom: '1rem' }}>
             <input type="email" placeholder="Email *" required style={inp} value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
           </div>
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '0.5rem' }}>
             <input type="password" placeholder="Parolă *" required style={inp} value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} />
+          </div>
+          <div style={{ textAlign: 'right', marginBottom: '1.5rem' }}>
+            <Link href="/forgot-password" style={{ fontSize: '0.85rem', color: '#065EA6', textDecoration: 'none', fontWeight: 300 }}>Ai uitat parola?</Link>
           </div>
           <button type="submit" disabled={loading} style={{ width: '100%', background: '#065EA6', border: 'none', borderRadius: '50px', color: '#fff', padding: '0.85rem', fontSize: '1rem', fontWeight: 300, cursor: 'pointer', fontFamily: '"Roboto",sans-serif', opacity: loading ? 0.7 : 1 }}>
             {loading ? 'Se autentifică...' : 'Autentificare'}
@@ -42,7 +45,7 @@ export default function LoginPage() {
         </form>
         <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.9rem', color: '#6D6E71', fontWeight: 300 }}>
           Nu ai cont?{' '}
-          <Link href="/register" style={{ color: '#065EA6', textDecoration: 'none', fontWeight: 400 }}>Înregistrează-te</Link>
+          <Link href="/inregistrare" style={{ color: '#065EA6', textDecoration: 'none', fontWeight: 400 }}>Înregistrează-te</Link>
         </p>
       </div>
     </main>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { getEvent, registerForEvent, storageUrl } from '@/lib/api'
 import type { BackendEvent, EventSpeaker } from '@/types'
 import { useAuth } from '@/lib/auth'
+import { useRecaptcha } from '@/lib/useRecaptcha'
 
 function DoctorCard({ speaker }: { speaker: EventSpeaker }) {
   return (
@@ -28,6 +29,7 @@ function DoctorCard({ speaker }: { speaker: EventSpeaker }) {
 export default function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
   const { user } = useAuth()
+  const { getToken } = useRecaptcha()
   const [event, setEvent] = useState<BackendEvent | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -38,7 +40,19 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
-    getEvent(slug).then(setEvent).catch(() => setNotFound(true)).finally(() => setLoading(false))
+    getEvent(slug).then(ev => {
+      setEvent(ev)
+      if (ev.schema_org) {
+        const existing = document.getElementById('event-schema-org')
+        if (existing) existing.remove()
+        const script = document.createElement('script')
+        script.id = 'event-schema-org'
+        script.type = 'application/ld+json'
+        script.text = ev.schema_org
+        document.head.appendChild(script)
+      }
+    }).catch(() => setNotFound(true)).finally(() => setLoading(false))
+    return () => { document.getElementById('event-schema-org')?.remove() }
   }, [slug])
 
   useEffect(() => {
@@ -47,7 +61,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault(); setSubmitError(''); setSubmitting(true)
-    try { await registerForEvent(slug, form); setSubmitted(true) } catch (err: unknown) { setSubmitError(err instanceof Error ? err.message : 'Eroare la înscriere') } finally { setSubmitting(false) }
+    try {
+      const recaptcha_token = await getToken('event_registration')
+      await registerForEvent(slug, { ...form, recaptcha_token, website: '' })
+      setSubmitted(true)
+    } catch (err: unknown) { setSubmitError(err instanceof Error ? err.message : 'Eroare la înscriere') } finally { setSubmitting(false) }
   }
 
   const inp = { width: '100%', padding: '1rem 1.25rem', border: '2px solid #065ea6', borderRadius: '20px', fontSize: '0.95rem', background: 'transparent', outline: 'none', fontFamily: '"Roboto",sans-serif', fontWeight: 300, color: '#000' }
@@ -239,6 +257,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
               </div>
             ) : (
               <form onSubmit={handleRegister}>
+                {/* Honeypot — must stay empty */}
+                <input name="website" type="text" tabIndex={-1} autoComplete="off" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }} aria-hidden="true" />
                 {submitError && <div style={{ background: '#fde8e8', color: '#c53030', borderRadius: '12px', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.9rem' }}>{submitError}</div>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input style={inp} placeholder="Prenume *" required value={form.first_name} onChange={e => setForm(p => ({ ...p, first_name: e.target.value }))} />

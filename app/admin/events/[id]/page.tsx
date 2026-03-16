@@ -22,7 +22,9 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   const [form, setForm] = useState<Partial<BackendEvent>>({})
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
-  const [tab, setTab] = useState<'info' | 'speakers' | 'schedule'>('info')
+  const [tab, setTab] = useState<'info' | 'speakers' | 'schedule' | 'seo'>('info')
+  const [seoForm, setSeoForm] = useState({ meta_title: '', meta_description: '', schema_org: '' })
+  const [savingSeo, setSavingSeo] = useState(false)
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [doctorSearch, setDoctorSearch] = useState('')
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null)
@@ -41,12 +43,21 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   useEffect(() => { getDoctors().then(setDoctors) }, [])
 
   useEffect(() => {
-    getEvent(id).then(ev => { setEvent(ev); setForm({ title: ev.title, subtitle: ev.subtitle || '', description: ev.description || '', date: ev.date?.split('T')[0] || '', time_start: ev.time_start || '', time_end: ev.time_end || '', location: ev.location || '', venue: ev.venue || '', credits: ev.credits, credits_label: ev.credits_label || '', image: ev.image || '', image_small: ev.image_small || '', image_big: ev.image_big || '', status: ev.status, max_participants: ev.max_participants }) })
+    getEvent(id).then(ev => {
+      setEvent(ev)
+      setForm({ title: ev.title, subtitle: ev.subtitle || '', description: ev.description || '', date: ev.date?.split('T')[0] || '', time_start: ev.time_start || '', time_end: ev.time_end || '', location: ev.location || '', venue: ev.venue || '', credits: ev.credits, credits_label: ev.credits_label || '', image: ev.image || '', image_small: ev.image_small || '', image_big: ev.image_big || '', status: ev.status, max_participants: ev.max_participants })
+      setSeoForm({ meta_title: ev.meta_title || '', meta_description: ev.meta_description || '', schema_org: ev.schema_org || '' })
+    })
   }, [id])
 
   const handleSave = async () => {
     setSaving(true)
     try { const ev = await updateEvent(Number(id), form); setEvent(ev) } catch { alert('Eroare la salvare') } finally { setSaving(false) }
+  }
+
+  const handleSaveSeo = async () => {
+    setSavingSeo(true)
+    try { const ev = await updateEvent(Number(id), seoForm); setEvent(ev) } catch { alert('Eroare la salvare SEO') } finally { setSavingSeo(false) }
   }
 
   const [uploadingImageSmall, setUploadingImageSmall] = useState(false)
@@ -155,10 +166,11 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         <Link href={`/events/${event.slug}`} target="_blank" style={{ padding: '0.5rem 1rem', background: '#ecffff', color: '#065EA6', borderRadius: '8px', textDecoration: 'none', fontSize: '0.85rem' }}>↗ Previzualizare</Link>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         {tabBtn('info', 'Informații')}
         {tabBtn('speakers', `Vorbitori (${event.speakers?.length || 0})`)}
         {tabBtn('schedule', `Program (${event.sessions?.length || 0})`)}
+        {tabBtn('seo', 'SEO')}
       </div>
 
       {tab === 'info' && (
@@ -287,8 +299,10 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
                     <button onClick={() => { setEditingDoctor(editingDoctor?.id === doc.id ? null : doc); setEditDoctorForm({ name: doc.name, specialty: doc.specialty || '', slug: doc.slug || '', bio: doc.bio || '' }) }} style={{ background: '#ecffff', color: '#065EA6', border: 'none', borderRadius: '6px', padding: '0.3rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>
                       {editingDoctor?.id === doc.id ? 'Închide' : 'Editează'}
                     </button>
-                    <button onClick={() => handleAddDoctorToEvent(doc, 'speaker')} style={{ background: '#e8f4e8', color: '#166534', border: 'none', borderRadius: '6px', padding: '0.3rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>+ Vorbitor</button>
-                    <button onClick={() => handleAddDoctorToEvent(doc, 'director')} style={{ background: '#fef3c7', color: '#92400e', border: 'none', borderRadius: '6px', padding: '0.3rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>+ Director</button>
+                    {(() => { const alreadyAdded = event?.speakers?.some(s => s.doctor_id === doc.id); return (<>
+                    <button onClick={() => handleAddDoctorToEvent(doc, 'speaker')} disabled={alreadyAdded} style={{ background: alreadyAdded ? '#e5e7eb' : '#e8f4e8', color: alreadyAdded ? '#9CA3AF' : '#166534', border: 'none', borderRadius: '6px', padding: '0.3rem 0.6rem', fontSize: '0.75rem', cursor: alreadyAdded ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif' }}>{alreadyAdded ? '✓ Adăugat' : '+ Vorbitor'}</button>
+                    <button onClick={() => handleAddDoctorToEvent(doc, 'director')} disabled={alreadyAdded} style={{ background: alreadyAdded ? '#e5e7eb' : '#fef3c7', color: alreadyAdded ? '#9CA3AF' : '#92400e', border: 'none', borderRadius: '6px', padding: '0.3rem 0.6rem', fontSize: '0.75rem', cursor: alreadyAdded ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif' }}>{alreadyAdded ? '✓ Adăugat' : '+ Director'}</button>
+                    </>); })()}
                   </div>
 
                   {editingDoctor?.id === doc.id && (
@@ -334,6 +348,44 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
             </div>
           </Section>
         </>
+      )}
+
+      {tab === 'seo' && (
+        <Section title="SEO & Metadata">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div>
+              <Label>Meta Title</Label>
+              <input style={inp} placeholder={event.title} value={seoForm.meta_title} onChange={e => setSeoForm(p => ({ ...p, meta_title: e.target.value }))} />
+              <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: seoForm.meta_title.length > 60 ? '#ef4444' : '#6D6E71', fontWeight: 300 }}>
+                {seoForm.meta_title.length}/60 caractere recomandate
+              </p>
+            </div>
+            <div>
+              <Label>Meta Description</Label>
+              <textarea style={{ ...inp, height: '80px', resize: 'vertical' }} placeholder="Descriere scurtă pentru motoarele de căutare..." value={seoForm.meta_description} onChange={e => setSeoForm(p => ({ ...p, meta_description: e.target.value }))} />
+              <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: seoForm.meta_description.length > 160 ? '#ef4444' : '#6D6E71', fontWeight: 300 }}>
+                {seoForm.meta_description.length}/160 caractere recomandate
+              </p>
+            </div>
+            <div>
+              <Label>Schema.org (JSON-LD)</Label>
+              <textarea
+                style={{ ...inp, height: '260px', resize: 'vertical', fontFamily: 'monospace', fontSize: '0.8rem' }}
+                placeholder={'{\n  "@context": "https://schema.org",\n  "@type": "Event",\n  "name": "' + event.title + '"\n}'}
+                value={seoForm.schema_org}
+                onChange={e => setSeoForm(p => ({ ...p, schema_org: e.target.value }))}
+                spellCheck={false}
+              />
+              {seoForm.schema_org && (() => { try { JSON.parse(seoForm.schema_org); return null } catch { return <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#ef4444', fontWeight: 300 }}>JSON invalid</p> } })()}
+              <p style={{ margin: '0.3rem 0 0', fontSize: '0.75rem', color: '#6D6E71', fontWeight: 300 }}>
+                Se injectează ca <code style={{ background: '#f3f4f6', padding: '0 4px', borderRadius: '3px' }}>&lt;script type=&quot;application/ld+json&quot;&gt;</code> în pagina evenimentului.
+              </p>
+            </div>
+            <button onClick={handleSaveSeo} disabled={savingSeo} style={{ alignSelf: 'flex-start', padding: '0.65rem 2rem', background: '#065EA6', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.9rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', opacity: savingSeo ? 0.7 : 1 }}>
+              {savingSeo ? 'Se salvează...' : 'Salvează SEO'}
+            </button>
+          </div>
+        </Section>
       )}
 
       {tab === 'schedule' && (

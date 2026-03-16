@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { InscriereForm } from '@/components/sections/InscriereForm'
 import { storageUrl } from '@/lib/api'
 import type { BackendEvent } from '@/types'
+import Link from "next/link";
 
 interface FeaturedWorkshopProps {
   event?: BackendEvent | null
@@ -201,17 +202,12 @@ export function FeaturedWorkshop({ event }: FeaturedWorkshopProps) {
         {/* Buton + Form */}
         <div className="flex flex-col items-center mt-5">
           <a
-            onClick={() => setFormOpen(v => !v)}
+            href={'/events/'+eventSlug}
             className="inline-flex items-center gap-2 text-white rounded-full px-8 py-2 transition-all hover:-translate-y-px cursor-pointer"
             style={{ background: '#065EA6', fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '13px' }}
           >
             Înscrie-te aici
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 4l5 5 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
           </a>
-
-          {formOpen && <InscriereForm eventSlug={eventSlug} />}
         </div>
 
       </div>

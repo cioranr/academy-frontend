@@ -36,6 +36,10 @@ async function apiJson<T>(endpoint: string, options: RequestInit = {}): Promise<
   const res = await apiFetch(endpoint, options)
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Server error' }))
+    if (err.errors) {
+      const messages = Object.values(err.errors as Record<string, string[]>).flat()
+      throw new Error(messages.join('\n'))
+    }
     throw new Error(err.message || `HTTP ${res.status}`)
   }
   return res.json()
@@ -45,12 +49,18 @@ async function apiJson<T>(endpoint: string, options: RequestInit = {}): Promise<
 export async function login(email: string, password: string): Promise<{ user: BackendUser; token: string }> {
   return apiJson('/login', { method: 'POST', body: JSON.stringify({ email, password }) })
 }
-export async function register(data: { name: string; first_name?: string; last_name?: string; email: string; password: string; password_confirmation: string; phone?: string; specialty?: string; professional_grade?: string }): Promise<{ user: BackendUser; token: string }> {
+export async function register(data: { name: string; first_name?: string; last_name?: string; email: string; password: string; password_confirmation: string; phone?: string; specialty?: string; professional_grade?: string; recaptcha_token?: string; website?: string }): Promise<{ user: BackendUser; token: string }> {
   return apiJson('/register', { method: 'POST', body: JSON.stringify(data) })
 }
 export async function logout(): Promise<void> {
   await apiFetch('/logout', { method: 'POST' }).catch(() => {})
   removeToken()
+}
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  return apiJson('/forgot-password', { method: 'POST', body: JSON.stringify({ email }) })
+}
+export async function resetPassword(data: { token: string; email: string; password: string; password_confirmation: string }): Promise<{ message: string }> {
+  return apiJson('/reset-password', { method: 'POST', body: JSON.stringify(data) })
 }
 export async function getMe(): Promise<BackendUser> { return apiJson('/me') }
 export async function updateProfile(data: Partial<BackendUser>): Promise<BackendUser> {
@@ -129,7 +139,7 @@ export async function deleteDoctor(id: number): Promise<void> {
 }
 
 // ── Registrations ──────────────────────────────────────────────────────────
-export async function registerForEvent(slug: string, data: { first_name: string; last_name: string; email: string; phone?: string; specialty?: string; professional_grade?: string; message?: string }): Promise<EventRegistration> {
+export async function registerForEvent(slug: string, data: { first_name: string; last_name: string; email: string; phone?: string; specialty?: string; professional_grade?: string; message?: string; recaptcha_token?: string; website?: string }): Promise<EventRegistration> {
   return apiJson(`/events/${slug}/register`, { method: 'POST', body: JSON.stringify(data) })
 }
 export async function getEventRegistrations(slug: string): Promise<EventRegistration[]> {

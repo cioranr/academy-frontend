@@ -6,7 +6,7 @@ import { createEvent } from '@/lib/api'
 
 export default function NewEventPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ title: '', subtitle: '', description: '', slug: '', date: '', time_start: '', time_end: '', location: '', venue: '', credits: '', credits_label: '', image: '', status: 'draft', max_participants: '' })
+  const [form, setForm] = useState({ title: '', subtitle: '', description: '', slug: '', date: '', time_start: '', time_end: '', location: '', venue: '', credits: '', credits_label: '', status: 'draft', max_participants: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm(p => ({ ...p, [k]: e.target.value }))
@@ -14,7 +14,7 @@ export default function NewEventPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true)
     try {
-      const ev = await createEvent({ ...form, credits: form.credits ? Number(form.credits) : undefined, max_participants: form.max_participants ? Number(form.max_participants) : undefined, subtitle: form.subtitle || undefined, description: form.description || undefined, slug: form.slug || undefined, time_start: form.time_start || undefined, time_end: form.time_end || undefined, location: form.location || undefined, venue: form.venue || undefined, credits_label: form.credits_label || undefined, image: form.image || undefined } as never)
+      const ev = await createEvent({ ...form, credits: form.credits ? Number(form.credits) : undefined, max_participants: form.max_participants ? Number(form.max_participants) : undefined, subtitle: form.subtitle || undefined, description: form.description || undefined, slug: form.slug || undefined, time_start: form.time_start || undefined, time_end: form.time_end || undefined, location: form.location || undefined, venue: form.venue || undefined, credits_label: form.credits_label || undefined } as never)
       router.push(`/admin/events/${ev.id}`)
     } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Eroare') } finally { setLoading(false) }
   }
@@ -55,7 +55,6 @@ export default function NewEventPage() {
               </select>
             </div>
             <div><Label>Slug URL</Label><input style={inp} placeholder="se generează automat" value={form.slug} onChange={set('slug')} /></div>
-            <div><Label>Imagine (URL)</Label><input style={inp} placeholder="/calendar-1.png" value={form.image} onChange={set('image')} /></div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>

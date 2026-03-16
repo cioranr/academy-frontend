@@ -40,17 +40,39 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
   const filtered = filter === 'all' ? registrations : registrations.filter(r => r.status === filter)
   const counts = { all: registrations.length, pending: registrations.filter(r => r.status === 'pending').length, approved: registrations.filter(r => r.status === 'approved').length }
 
+  const exportCsv = () => {
+    const headers = ['Nume', 'Prenume', 'Email', 'Telefon', 'Specialitate', 'Grad profesional', 'Status', 'Mesaj', 'Data înscrierii']
+    const rows = filtered.map(r => [
+      r.last_name, r.first_name, r.email, r.phone || '', r.specialty || '',
+      r.professional_grade || '', STATUS_RO[r.status],
+      (r.message || '').replace(/"/g, '""'),
+      new Date(r.registered_at).toLocaleDateString('ro-RO'),
+    ])
+    const csv = 'sep=;\r\n' + [headers, ...rows].map(row => row.map(v => `"${v}"`).join(';')).join('\r\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `inscrieri-${event?.slug || id}${filter !== 'all' ? `-${filter}` : ''}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <Link href="/admin/events" style={{ color: '#6D6E71', textDecoration: 'none', fontSize: '0.9rem' }}>← Înapoi</Link>
         <h1 style={{ fontWeight: 300, fontSize: '1.5rem', color: '#000', margin: 0, flex: 1 }}>Înscrieri: {event?.title || '...'}</h1>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
           {[['all', 'Toate'], ['pending', 'În așteptare'], ['approved', 'Aprobate']].map(([val, label]) => (
             <button key={val} onClick={() => setFilter(val)} style={{ padding: '0.4rem 0.9rem', borderRadius: '20px', border: 'none', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', fontSize: '0.8rem', fontWeight: filter === val ? 500 : 400, background: filter === val ? '#065EA6' : '#f3f4f6', color: filter === val ? '#fff' : '#374151' }}>
               {label} ({counts[val as keyof typeof counts] ?? 0})
             </button>
           ))}
+          <button onClick={exportCsv} disabled={filtered.length === 0} style={{ padding: '0.4rem 0.9rem', borderRadius: '20px', border: '1px solid #d1d5db', cursor: filtered.length === 0 ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif', fontSize: '0.8rem', fontWeight: 400, background: '#fff', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
         </div>
       </div>
 

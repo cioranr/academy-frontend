@@ -4,10 +4,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
+import { useRecaptcha } from '@/lib/useRecaptcha'
 
 export default function InregistrarePage() {
   const { register } = useAuth()
   const router = useRouter()
+  const { getToken } = useRecaptcha()
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', password_confirmation: '', phone: '', specialty: '', professional_grade: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,7 +19,8 @@ export default function InregistrarePage() {
     e.preventDefault(); setError(''); setLoading(true)
     if (form.password !== form.password_confirmation) { setError('Parolele nu coincid'); setLoading(false); return }
     try {
-      await register({ ...form, name: `${form.first_name} ${form.last_name}` })
+      const recaptcha_token = await getToken('register')
+      await register({ ...form, name: `${form.first_name} ${form.last_name}`, recaptcha_token, website: '' })
       router.push('/dashboard')
     } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Eroare la înregistrare') } finally { setLoading(false) }
   }
@@ -44,11 +47,13 @@ export default function InregistrarePage() {
 
           {error && (
             <div style={{ background: '#fde8e8', color: '#c53030', borderRadius: '12px', padding: '0.75rem 1rem', marginBottom: '1.5rem', fontSize: '0.9rem', maxWidth: '700px', margin: '0 auto 1.5rem' }}>
-              {error}
+              {error.split('\n').map((msg, i) => <div key={i}>{msg}</div>)}
             </div>
           )}
 
           <form onSubmit={handleSubmit} style={{ maxWidth: '700px', margin: '0 auto' }}>
+            {/* Honeypot — must stay empty */}
+            <input name="website" type="text" tabIndex={-1} autoComplete="off" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }} aria-hidden="true" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ marginBottom: '1rem' }}>
               <input placeholder="Prenume *" required style={inp} value={form.first_name} onChange={set('first_name')} />
               <input placeholder="Nume *" required style={inp} value={form.last_name} onChange={set('last_name')} />
