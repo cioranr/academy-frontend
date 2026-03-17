@@ -108,6 +108,15 @@ export function Footer() {
         {/* ── SEPARATOR ── */}
         <div className="border-t border-gray-300 mt-6 mb-4" />
 
+        {/* ── reCAPTCHA disclosure (required by Google ToS when badge is hidden) ── */}
+        <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '11px', color: '#6D6E71', margin: '0 0 12px', textAlign: 'center' }}>
+          Acest site este protejat de reCAPTCHA.{' '}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#6D6E71', textDecoration: 'underline' }}>Politica de confidențialitate</a>
+          {' '}și{' '}
+          <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#6D6E71', textDecoration: 'underline' }}>Termenii de utilizare</a>
+          {' '}Google se aplică.
+        </p>
+
         {/* ── LEGAL + COPYRIGHT ── */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-2">
           <ul className="flex flex-wrap items-center justify-center md:justify-start m-0 p-0 list-none gap-x-1 gap-y-1">

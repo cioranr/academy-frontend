@@ -23,6 +23,13 @@
 }
 
 @layer base {
+  /* Hide reCAPTCHA badge – disclosure shown in footer per Google ToS */
+  .grecaptcha-badge {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
   *, *::before, *::after {
     font-family: "Roboto", sans-serif;
   }

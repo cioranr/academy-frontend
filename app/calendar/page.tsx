@@ -8,7 +8,12 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<BackendEvent[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { getEvents().then(setEvents).catch(console.error).finally(() => setLoading(false)) }, [])
+  useEffect(() => {
+    getEvents()
+      .then(all => setEvents(all.filter(ev => ev.status === 'published')))
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <main style={{ background: '#ecffff', fontFamily: '"Roboto",sans-serif', minHeight: '100vh' }}>
