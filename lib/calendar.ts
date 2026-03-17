@@ -2,12 +2,8 @@ import type { BackendEvent } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
-export function addToCalendar(event: BackendEvent): void {
-  // webcal:// is intercepted by the OS before the browser can download it,
-  // so Calendar.app / Outlook opens directly on macOS & Windows
-  const httpUrl = `${API_BASE}/events/${event.slug}/ics`
-  const webcalUrl = httpUrl.replace(/^https?:\/\//, 'webcal://')
-  window.location.href = webcalUrl
+export function icsUrl(event: BackendEvent): string {
+  return `${API_BASE}/events/${event.slug}/ics`
 }
 
 function icsDate(dateStr: string, timeStr: string | null): string {
@@ -15,6 +11,23 @@ function icsDate(dateStr: string, timeStr: string | null): string {
   if (!timeStr) return d
   const t = timeStr.substring(0, 8).replace(/:/g, '')
   return `${d}T${t}`
+}
+
+export function outlookCalendarUrl(event: BackendEvent): string {
+  const start = icsDate(event.date, event.time_start).replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/, '$1-$2-$3T$4:$5:$6')
+  const end   = icsDate(event.date, event.time_end ?? event.time_start).replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/, '$1-$2-$3T$4:$5:$6')
+  const location = [event.location, event.venue].filter(Boolean).join(', ')
+
+  const params = new URLSearchParams({
+    rru:     'addevent',
+    path:    '/calendar/action/compose',
+    subject: event.title,
+    startdt: start,
+    enddt:   end,
+    ...(location          && { location }),
+    ...(event.description && { body: event.description }),
+  })
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params}`
 }
 
 export function googleCalendarUrl(event: BackendEvent): string {

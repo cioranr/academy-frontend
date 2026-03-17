@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { getMyRegistrations, getUserDegrees, downloadDegree, updateProfile } from '@/lib/api'
 import type { EventRegistration, Degree } from '@/types'
-import { addToCalendar } from '@/lib/calendar'
+import { googleCalendarUrl, outlookCalendarUrl, icsUrl } from '@/lib/calendar'
 
 const ROLE_LABELS: Record<string, string> = { participant: 'Participant', doctor: 'Medic', admin: 'Administrator', events_manager: 'Manager Evenimente' }
 const STATUS_COLORS: Record<string, string> = { pending: '#f59e0b', approved: '#10b981', rejected: '#ef4444', cancelled: '#6b7280' }
@@ -18,6 +18,13 @@ export default function DashboardPage() {
   const [degrees, setDegrees] = useState<Degree[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [activeTab, setActiveTab] = useState<'events' | 'degrees' | 'profile'>('events')
+  const [openCalendarId, setOpenCalendarId] = useState<number | null>(null)
+  useEffect(() => {
+    if (openCalendarId === null) return
+    const close = () => setOpenCalendarId(null)
+    document.addEventListener('click', close, { capture: true, once: true })
+    return () => document.removeEventListener('click', close, { capture: true })
+  }, [openCalendarId])
   const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '', phone: '', specialty: '', professional_grade: '' })
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileSaved, setProfileSaved] = useState(false)
@@ -163,10 +170,41 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                       {reg.event && (
-                        <button onClick={() => addToCalendar(reg.event!)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.85rem', background: '#ecffff', border: '1px solid #065EA6', borderRadius: '20px', color: '#065EA6', fontSize: '0.8rem', fontWeight: 400, cursor: 'pointer', fontFamily: '"Roboto",sans-serif', whiteSpace: 'nowrap' }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
-                          Adaugă în calendar
-                        </button>
+                        <div style={{ position: 'relative' }}>
+                          <button
+                            onClick={() => setOpenCalendarId(openCalendarId === reg.id ? null : reg.id)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.85rem', background: '#ecffff', border: '1px solid #065EA6', borderRadius: '20px', color: '#065EA6', fontSize: '0.8rem', fontWeight: 400, cursor: 'pointer', fontFamily: '"Roboto",sans-serif', whiteSpace: 'nowrap' }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            Adaugă în calendar
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
+                          </button>
+                          {openCalendarId === reg.id && (
+                            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 50, minWidth: '190px', overflow: 'hidden' }}>
+                              <a href={googleCalendarUrl(reg.event!)} target="_blank" rel="noopener noreferrer" onClick={() => setOpenCalendarId(null)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.65rem 1rem', fontSize: '0.82rem', color: '#000', textDecoration: 'none', fontFamily: '"Roboto",sans-serif', fontWeight: 400, borderBottom: '1px solid #f3f4f6' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="#EA4335"><path d="M22.5 12c0-5.799-4.701-10.5-10.5-10.5S1.5 6.201 1.5 12 6.201 22.5 12 22.5 22.5 17.799 22.5 12z"/><path fill="#fff" d="M12 6.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zm0 9a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>
+                                Google Calendar
+                              </a>
+                              <a href={outlookCalendarUrl(reg.event!)} target="_blank" rel="noopener noreferrer" onClick={() => setOpenCalendarId(null)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.65rem 1rem', fontSize: '0.82rem', color: '#000', textDecoration: 'none', fontFamily: '"Roboto",sans-serif', fontWeight: 400, borderBottom: '1px solid #f3f4f6' }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="#0078D4"><rect width="24" height="24" rx="3"/><path fill="#fff" d="M5 7h14v10H5z"/></svg>
+                                Outlook / Office 365
+                              </a>
+                              <a href={icsUrl(reg.event!)} target="_blank" rel="noopener noreferrer" onClick={() => setOpenCalendarId(null)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.65rem 1rem', fontSize: '0.82rem', color: '#000', textDecoration: 'none', fontFamily: '"Roboto",sans-serif', fontWeight: 400 }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6D6E71" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                Apple Calendar (.ics)
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       )}
                       <span style={{ background: STATUS_COLORS[reg.status] + '20', color: STATUS_COLORS[reg.status], borderRadius: '20px', padding: '0.3rem 0.85rem', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
                         {STATUS_LABELS[reg.status]}
