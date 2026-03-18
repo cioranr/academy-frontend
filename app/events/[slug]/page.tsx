@@ -59,7 +59,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
     if (user) setForm(p => ({ ...p, first_name: user.first_name || '', last_name: user.last_name || '', email: user.email, phone: user.phone || '', specialty: user.specialty || '', professional_grade: user.professional_grade || '' }))
   }, [user])
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault(); setSubmitError(''); setSubmitting(true)
     try {
       const recaptcha_token = await getToken('event_registration')
@@ -255,6 +255,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                 <div style={{ fontSize: '1.1rem', fontWeight: 400, marginBottom: '0.5rem' }}>Cererea ta a fost înregistrată cu succes!</div>
                 <div style={{ fontSize: '0.9rem', fontWeight: 300 }}>Vei fi contactat în curând cu detalii despre eveniment.</div>
               </div>
+            ) : user ? (
+              <div style={{ textAlign: 'center' }}>
+                {submitError && <div style={{ background: '#fde8e8', color: '#c53030', borderRadius: '12px', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.9rem' }}>{submitError}</div>}
+                <button
+                  onClick={handleRegister}
+                  disabled={submitting}
+                  style={{ background: '#065EA6', border: 'none', borderRadius: '50px', color: '#fff', padding: '0.75rem 3rem', fontSize: '1.1rem', fontWeight: 300, cursor: 'pointer', minWidth: '200px', fontFamily: '"Roboto",sans-serif', boxShadow: '0 4px 15px rgba(6,94,166,0.3)', opacity: submitting ? 0.7 : 1 }}
+                >
+                  {submitting ? 'Se trimite...' : 'Înscrie-te'}
+                </button>
+              </div>
             ) : (
               <form onSubmit={handleRegister}>
                 {/* Honeypot — must stay empty */}
@@ -280,7 +291,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                     <option value="alta">Altă specialitate</option>
                   </select>
                 </div>
-                <div className="flex justify-center mt-6">
+                <div className="flex items-start gap-3 mt-6 px-1">
+                  <input type="checkbox" id="terms" required style={{ marginTop: '3px', accentColor: '#065EA6', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }} />
+                  <label htmlFor="terms" style={{ fontFamily: '"Roboto",sans-serif', fontWeight: 300, fontSize: '0.85rem', color: '#414042', lineHeight: 1.5, cursor: 'pointer' }}>
+                    Am citit și sunt de acord cu{' '}
+                    <Link href="/termeni-si-conditii" target="_blank" style={{ color: '#065EA6', textDecoration: 'underline' }}>
+                      Termenii și Condițiile
+                    </Link>
+                  </label>
+                </div>
+                <div className="flex justify-center mt-4">
                   <button type="submit" disabled={submitting} style={{ background: '#065EA6', border: 'none', borderRadius: '50px', color: '#fff', padding: '0.5rem 2rem', fontSize: '1.1rem', fontWeight: 300, cursor: 'pointer', minWidth: '200px', fontFamily: '"Roboto",sans-serif', boxShadow: '0 4px 15px rgba(6,94,166,0.3)', opacity: submitting ? 0.7 : 1 }}>
                     {submitting ? 'Se trimite...' : 'Trimite'}
                   </button>
