@@ -107,7 +107,15 @@ export function Footer() {
 
         {/* ── SEPARATOR ── */}
         <div className="border-t border-gray-300 mt-6 mb-4" />
-
+        {/* ── ANPC ── */}
+<div className="flex items-center justify-center gap-4 mb-4">
+  <a href="https://anpc.ro/ce-este-sal/" target="_blank" rel="noopener noreferrer">
+    <Image src="/anpc-sal.svg" alt="ANPC SAL" width={150} height={50} quality={90} />
+  </a>
+  <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer">
+    <Image src="/anpc-sol.svg" alt="ANPC SOL" width={150} height={50} quality={90} />
+  </a>
+</div>
         {/* ── reCAPTCHA disclosure (required by Google ToS when badge is hidden) ── */}
         <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '11px', color: '#6D6E71', margin: '0 0 12px', textAlign: 'center' }}>
           Acest site este protejat de reCAPTCHA.{' '}
