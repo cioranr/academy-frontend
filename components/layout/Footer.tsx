@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth'
 const NAV_LINKS = [
   { label: 'Despre noi', href: '/despre-noi' },
   { label: 'Calendar',   href: '/calendar' },
-  { label: 'Arhivă',     href: '/arhiva' },
+ // { label: 'Arhivă',     href: '/arhiva' },
   { label: 'Contact',    href: '/contact' },
 ]
 

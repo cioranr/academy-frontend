@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { label: 'Acasă',      href: '/' },
   { label: 'Despre noi', href: '/despre-noi' },
   { label: 'Calendar',   href: '/calendar' },
-  { label: 'Arhivă',     href: '/arhiva' },
+ // { label: 'Arhivă',     href: '/arhiva' },
   { label: 'Contact',    href: '/contact' },
 ]
 
