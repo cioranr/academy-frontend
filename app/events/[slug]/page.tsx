@@ -34,7 +34,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const speakersRef = useRef<HTMLDivElement>(null)
-  const [form, setForm] = useState({ first_name: user?.first_name || '', last_name: user?.last_name || '', email: user?.email || '', phone: user?.phone || '', specialty: user?.specialty || '', professional_grade: user?.professional_grade || '', message: '' })
+  const [form, setForm] = useState({ first_name: user?.first_name || '', last_name: user?.last_name || '', email: user?.email || '', phone: user?.phone || '', specialty: user?.specialty || '', professional_grade: user?.professional_grade || '', cuim: user?.cuim || '', message: '' })
+  const showCuim = ['medic-specialist', 'medic-primar'].includes(form.professional_grade)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -56,14 +57,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   }, [slug])
 
   useEffect(() => {
-    if (user) setForm(p => ({ ...p, first_name: user.first_name || '', last_name: user.last_name || '', email: user.email, phone: user.phone || '', specialty: user.specialty || '', professional_grade: user.professional_grade || '' }))
+    if (user) setForm(p => ({ ...p, first_name: user.first_name || '', last_name: user.last_name || '', email: user.email, phone: user.phone || '', specialty: user.specialty || '', professional_grade: user.professional_grade || '', cuim: user.cuim || '' }))
   }, [user])
 
   const handleRegister = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault(); setSubmitError(''); setSubmitting(true)
     try {
       const recaptcha_token = await getToken('event_registration')
-      await registerForEvent(slug, { ...form, recaptcha_token, website: '' })
+      const payload = { ...form, recaptcha_token, website: '' };
+      if (!showCuim) payload.cuim = '';
+      await registerForEvent(slug, payload)
       setSubmitted(true)
     } catch (err: unknown) { setSubmitError(err instanceof Error ? err.message : 'Eroare la înscriere') } finally { setSubmitting(false) }
   }
@@ -290,6 +293,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                     <option value="rezidenti">Rezidenți</option>
                     <option value="alta">Altă specialitate</option>
                   </select>
+                  {showCuim && (
+                    <input style={{ ...inp, gridColumn: '1 / -1' }} placeholder="Cod Unic de Identificare Medic (CUIM) *" required value={form.cuim} onChange={e => setForm(p => ({ ...p, cuim: e.target.value }))} />
+                  )}
                 </div>
                 <div className="flex items-start gap-3 mt-6 px-1">
                   <input type="checkbox" id="terms" required style={{ marginTop: '3px', accentColor: '#065EA6', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }} />

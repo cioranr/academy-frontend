@@ -10,7 +10,8 @@ export default function InregistrarePage() {
   const { register } = useAuth()
   const router = useRouter()
   const { getToken } = useRecaptcha()
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', password_confirmation: '', phone: '', specialty: '', professional_grade: '' })
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', password_confirmation: '', phone: '', specialty: '', professional_grade: '', cuim: '' })
+  const showCuim = ['medic-specialist', 'medic-primar'].includes(form.professional_grade)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm(p => ({ ...p, [k]: e.target.value }))
@@ -20,7 +21,9 @@ export default function InregistrarePage() {
     if (form.password !== form.password_confirmation) { setError('Parolele nu coincid'); setLoading(false); return }
     try {
       const recaptcha_token = await getToken('register')
-      await register({ ...form, name: `${form.first_name} ${form.last_name}`, recaptcha_token, website: '' })
+      const payload = { ...form, name: `${form.first_name} ${form.last_name}`, recaptcha_token, website: '' }
+      if (!showCuim) payload.cuim = ''
+      await register(payload)
       router.push('/dashboard')
     } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Eroare la înregistrare') } finally { setLoading(false) }
   }
@@ -73,6 +76,9 @@ export default function InregistrarePage() {
                 <option value="rezidenti">Rezidenți</option>
                 <option value="alta">Altă specialitate</option>
               </select>
+              {showCuim && (
+                <input placeholder="Cod Unic de Identificare Medic (CUIM) *" required style={{ ...inp, gridColumn: '1 / -1' }} value={form.cuim} onChange={set('cuim')} />
+              )}
               <input type="password" placeholder="Parolă *" required style={inp} value={form.password} onChange={set('password')} />
               <input type="password" placeholder="Confirmă parola *" required style={inp} value={form.password_confirmation} onChange={set('password_confirmation')} />
             </div>
@@ -82,6 +88,16 @@ export default function InregistrarePage() {
               Pentru mai multe informații, accesați pagina cu{' '}
               <Link href="/politica-confidentialitate" style={{ color: '#065ea6' }}>Nota de informare</Link>.
             </p>
+
+            <div className="flex items-start gap-3 mt-6 px-1 mb-6">
+              <input type="checkbox" id="terms" required style={{ marginTop: '3px', accentColor: '#065EA6', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }} />
+              <label htmlFor="terms" style={{ fontFamily: '"Roboto",sans-serif', fontWeight: 300, fontSize: '0.85rem', color: '#414042', lineHeight: 1.5, cursor: 'pointer' }}>
+                Am citit și sunt de acord cu{' '}
+                <Link href="/termeni-si-conditii" target="_blank" style={{ color: '#065EA6', textDecoration: 'underline' }}>
+                  Termenii și Condițiile
+                </Link>
+              </label>
+            </div>
 
             <div className="flex justify-center">
               <button type="submit" disabled={loading} className="transition-all hover:-translate-y-px"

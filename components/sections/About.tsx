@@ -1,4 +1,4 @@
-// src/components/sections/About.tsx
+import Link from 'next/link'
 
 export function About() {
   return (
@@ -28,10 +28,9 @@ export function About() {
           diagnosticul și tratamentul afecțiunilor cardiovasculare.
         </p>
 
-        <button className="btn-primary mx-auto cursor-pointer" style={{fontFamily: '"Roboto", sans-serif', fontWeight: 300,}}>
+        <Link href="/despre-noi" className="btn-primary mx-auto cursor-pointer mt-8" style={{fontFamily: '"Roboto", sans-serif', fontWeight: 300, display: 'inline-flex', padding: '0.75rem 2.5rem', borderRadius: '50px', background: '#065EA6', color: '#ffffff', textDecoration: 'none'}}>
           Despre noi
-          
-        </button>
+        </Link>
       </div>
     </section>
   )

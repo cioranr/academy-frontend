@@ -41,10 +41,10 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
   const counts = { all: registrations.length, pending: registrations.filter(r => r.status === 'pending').length, approved: registrations.filter(r => r.status === 'approved').length }
 
   const exportCsv = () => {
-    const headers = ['Nume', 'Prenume', 'Email', 'Telefon', 'Specialitate', 'Grad profesional', 'Status', 'Mesaj', 'Data înscrierii']
+    const headers = ['Nume', 'Prenume', 'Email', 'Telefon', 'Specialitate', 'Grad profesional', 'CUIM', 'Status', 'Mesaj', 'Data înscrierii']
     const rows = filtered.map(r => [
       r.last_name, r.first_name, r.email, r.phone || '', r.specialty || '',
-      r.professional_grade || '', STATUS_RO[r.status],
+      r.professional_grade || '', r.cuim || '', STATUS_RO[r.status],
       (r.message || '').replace(/"/g, '""'),
       new Date(r.registered_at).toLocaleDateString('ro-RO'),
     ])
@@ -81,7 +81,7 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Nume', 'Email', 'Telefon', 'Specialitate', 'Grad', 'Status', 'Data', 'Acțiuni'].map(h => (
+                {['Nume', 'Email', 'Telefon', 'Specialitate', 'Grad', 'CUIM', 'Status', 'Data', 'Acțiuni'].map(h => (
                   <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6D6E71', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -94,6 +94,7 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                   <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', color: '#374151' }}>{reg.phone || '—'}</td>
                   <td style={{ padding: '0.85rem 1rem', fontSize: '0.8rem', color: '#374151' }}>{reg.specialty || '—'}</td>
                   <td style={{ padding: '0.85rem 1rem', fontSize: '0.8rem', color: '#374151' }}>{reg.professional_grade || '—'}</td>
+                  <td style={{ padding: '0.85rem 1rem', fontSize: '0.8rem', color: '#374151' }}>{reg.cuim || '—'}</td>
                   <td style={{ padding: '0.85rem 1rem' }}>
                     <span style={{ ...STATUS_COLORS[reg.status], borderRadius: '20px', padding: '0.2rem 0.6rem', fontSize: '0.75rem', fontWeight: 500 }}>{STATUS_RO[reg.status]}</span>
                   </td>
@@ -107,7 +108,7 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={8} style={{ padding: '3rem', textAlign: 'center', color: '#6D6E71', fontWeight: 300 }}>Nicio înscriere.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: '#6D6E71', fontWeight: 300 }}>Nicio înscriere.</td></tr>}
             </tbody>
           </table>
         </div>

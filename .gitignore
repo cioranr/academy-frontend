@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+.idea/
+package-lock.json
+
 # production
 /build
 

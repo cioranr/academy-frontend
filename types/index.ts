@@ -51,13 +51,13 @@ export interface EventRegistration {
   id: number; event_id: number; user_id: number | null
   first_name: string; last_name: string; email: string
   phone: string | null; specialty: string | null; professional_grade: string | null
-  message: string | null; status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+  cuim: string | null; message: string | null; status: 'pending' | 'approved' | 'rejected' | 'cancelled'
   registered_at: string; event?: BackendEvent; user?: BackendUser
 }
 export interface BackendUser {
   id: number; name: string; first_name: string | null; last_name: string | null
   email: string; phone: string | null; specialty: string | null
-  professional_grade: string | null; email_verified_at: string | null
+  professional_grade: string | null; cuim: string | null; email_verified_at: string | null
   role: 'participant' | 'doctor' | 'admin' | 'events_manager'
   created_at: string; updated_at: string
 }

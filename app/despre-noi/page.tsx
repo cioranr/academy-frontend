@@ -1,11 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
-import { InscriereForm } from '@/components/sections/InscriereForm'
 
 export default function DespreNoiPage() {
-  const [formOpen, setFormOpen] = useState(false)
 
   return (
     <main style={{ fontFamily: '"Roboto", sans-serif' }}>
@@ -78,21 +75,6 @@ export default function DespreNoiPage() {
            
 
           </div>
-          {/* Buton + Form */}
-            <div className="flex justify-center mb-6 mt-4">
-              <button
-                onClick={() => setFormOpen(v => !v)}
-                className="inline-flex items-center gap-2 text-white rounded-full px-8 py-2 transition-all hover:-translate-y-px"
-                style={{ background: '#065EA6', fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '13px', border: 'none', cursor: 'pointer' }}
-              >
-                Înscrie-te aici
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 4l5 5 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-
-            {formOpen && <InscriereForm />}
         </div>
 
       </div>
