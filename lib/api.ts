@@ -198,8 +198,41 @@ export async function uploadTestimonialImage(id: number, file: File): Promise<st
   const data = await apiJson<{ image: string }>(`/testimonials/${id}/image`, { method: 'POST', body: fd })
   return data.image
 }
+export async function uploadTestimonialVideo(id: number, file: File): Promise<string> {
+  const fd = new FormData(); fd.append('video', file)
+  const data = await apiJson<{ video: string }>(`/testimonials/${id}/video`, { method: 'POST', body: fd })
+  return data.video
+}
 export async function deleteTestimonial(id: number): Promise<void> {
   await apiFetch(`/testimonials/${id}`, { method: 'DELETE' })
+}
+
+// ── Contact messages ──────────────────────────────────────────────────────
+export interface ContactMessage {
+  id: number
+  first_name: string
+  last_name: string
+  email: string
+  phone: string | null
+  message: string | null
+  read: boolean
+  created_at: string
+}
+
+export async function submitContact(data: { first_name: string; last_name: string; email: string; phone: string; message: string }): Promise<void> {
+  await apiJson('/contact', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function getContactMessages(): Promise<ContactMessage[]> {
+  return apiJson('/contact')
+}
+
+export async function markContactMessageRead(id: number): Promise<ContactMessage> {
+  return apiJson(`/contact/${id}/read`, { method: 'PATCH' })
+}
+
+export async function deleteContactMessage(id: number): Promise<void> {
+  await apiFetch(`/contact/${id}`, { method: 'DELETE' })
 }
 
 // ── Legacy helpers (for existing server components) ────────────────────────

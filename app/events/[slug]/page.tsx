@@ -35,7 +35,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   const [notFound, setNotFound] = useState(false)
   const speakersRef = useRef<HTMLDivElement>(null)
   const [form, setForm] = useState({ first_name: user?.first_name || '', last_name: user?.last_name || '', email: user?.email || '', phone: user?.phone || '', specialty: user?.specialty || '', professional_grade: user?.professional_grade || '', cuim: user?.cuim || '', message: '' })
-  const showCuim = ['medic-specialist', 'medic-primar'].includes(form.professional_grade)
+  const showCuim = ['medic-specialist', 'medic-primar'].includes(form.professional_grade) && form.specialty !== 'rezidenti'
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -280,14 +280,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                   <input type="email" style={inp} placeholder="E-Mail *" required value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
                   <input type="tel" style={inp} placeholder="Telefon" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
                   <select style={sel} value={form.professional_grade} onChange={e => setForm(p => ({ ...p, professional_grade: e.target.value }))}>
-                    <option value="">Grad profesional</option>
+                    <option value="" disabled>Grad profesional</option>
                     <option value="medic-primar">Medic primar</option>
                     <option value="medic-specialist">Medic specialist</option>
                     <option value="medic-rezident">Medic rezident</option>
                     <option value="student">Student</option>
                   </select>
                   <select style={sel} value={form.specialty} onChange={e => setForm(p => ({ ...p, specialty: e.target.value }))}>
-                    <option value="">Specialitate</option>
+                    <option value="" disabled>Specialitate</option>
                     <option value="cardiologie">Cardiologie</option>
                     <option value="chirurgie">Chirurgie cardiovasculară</option>
                     <option value="rezidenti">Rezidenți</option>

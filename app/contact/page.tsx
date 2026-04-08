@@ -1,5 +1,7 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
+import { submitContact } from '@/lib/api'
 
 const inp: React.CSSProperties = {
   width: '100%',
@@ -25,11 +27,10 @@ export default function ContactPage() {
     setError('')
     setSubmitting(true)
     try {
-      // TODO Radu: înlocuiește cu endpoint real
-      await new Promise(r => setTimeout(r, 1000))
+      await submitContact(form)
       setSubmitted(true)
-    } catch {
-      setError('A apărut o eroare. Vă rugăm încercați din nou.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'A apărut o eroare. Vă rugăm încercați din nou.')
     } finally {
       setSubmitting(false)
     }
@@ -48,20 +49,20 @@ export default function ContactPage() {
           <h1 style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '32px', color: '#6D6E71', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 16px', textAlign: 'left' }}>
             Contact
           </h1>
-          
+
         </div>
 
         {/* Card gri */}
         <div style={{ background: '#F7F7F7', borderRadius: '0 0 80px 80px', padding: '3rem 2rem', marginBottom: '60px' }}>
-<p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '15px', color: '#414042', lineHeight: 1.8, maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '15px', color: '#414042', lineHeight: 1.8, maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             Ai întrebări despre evenimentele noastre, înscrieri sau colaborări?
             Echipa Monza Ares Academy îți stă la dispoziție cu informații complete și suport rapid.
             Completează formularul de mai jos, iar noi te vom contacta în cel mai scurt timp.
           </p>
-          <div style={{ maxWidth: '560px', margin: '0 auto', marginTop:'50px' }}>
+          <div style={{ maxWidth: '560px', margin: '0 auto', marginTop: '50px' }}>
 
             {submitted ? (
-              <div style={{ background: '#d4edda', color: '#155724', border: '1px solid #c3e6cb', borderRadius: '25px', padding: '2rem', textAlign: 'center',  }}>
+              <div style={{ background: '#d4edda', color: '#155724', border: '1px solid #c3e6cb', borderRadius: '25px', padding: '2rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.1rem', fontWeight: 400, marginBottom: '0.5rem' }}>Mesajul tău a fost trimis cu succes!</div>
                 <div style={{ fontSize: '0.9rem', fontWeight: 300 }}>Te vom contacta în cel mai scurt timp.</div>
               </div>
@@ -87,19 +88,22 @@ export default function ContactPage() {
                   onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
                 />
 
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '12px', color: '#6D6E71', lineHeight: 1.6, marginBottom: '24px', textAlign: 'center' }}>
-                  Prin apăsarea butonului Trimite, sunt de acord cu prelucrarea datelor mele cu caracter personal
-                  (ce pot include și date cu caracter medical) în vederea furnizării serviciilor de către MONZA ARES.
-                  Pentru mai multe informații, accesați pagina{' '}
-                  <a href="/politica-confidentialitate" style={{ color: '#065EA6' }}>notei de informare</a>.
-                </p>
+                <div className="flex items-start gap-3 px-1 mb-6">
+                  <input type="checkbox" id="terms" required style={{ marginTop: '3px', accentColor: '#065EA6', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }} />
+                  <label htmlFor="terms" style={{ fontFamily: '"Roboto",sans-serif', fontWeight: 300, fontSize: '12px', color: '#6D6E71', lineHeight: 1.6, cursor: 'pointer' }}>
+                     sunt de acord cu prelucrarea datelor mele cu caracter personal
+                    (ce pot include și date cu caracter medical) în vederea furnizării serviciilor de către MONZA ARES.
+                    Pentru mai multe informații, accesați pagina{' '}
+                    <Link href="/politica-confidentialitate" target="_blank" style={{ color: '#065EA6' }}>notei de informare</Link>.
+                  </label>
+                </div>
 
                 <div className="flex justify-center">
                   <button
                     type="submit"
                     disabled={submitting}
                     className="inline-flex items-center gap-2 text-white rounded-full px-8 py-2 transition-all hover:-translate-y-px"
-                    style={{    padding: '0.5rem 4rem', background: '#065EA6', border: 'none', cursor: submitting ? 'default' : 'pointer', fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '13px', opacity: submitting ? 0.7 : 1 }}
+                    style={{ padding: '0.5rem 4rem', background: '#065EA6', border: 'none', cursor: submitting ? 'default' : 'pointer', fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '13px', opacity: submitting ? 0.7 : 1 }}
                   >
                     {submitting ? 'Se trimite...' : 'Trimite'}
                   </button>
@@ -107,32 +111,31 @@ export default function ContactPage() {
               </form>
             )}
 
-           
-
           </div>
-          
+
         </div>
-{/* Contact direct */}
-<div style={{ marginTop: '12px', textAlign: 'center', marginBottom:'3rem',}}>
-  <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '14px', color: '#6D6E71', marginBottom: '12px' }}>
-    Dacă preferi contactul direct, ne poți scrie la:
-  </p>
-  
-   <a href="mailto:academy@monza-ares.ro"
-    style={{
-      display: 'inline-block',
-      color: '#ED3224',
-      fontWeight: 400,
-      fontSize: '15px',
-      textDecoration: 'none',
-      border: '1px solid #ED3224',
-      borderRadius: '50px',
-      padding: '8px 24px',
-    }}
-  >
-    academy@monza-ares.ro
-  </a>
-</div>
+
+        {/* Contact direct */}
+        <div style={{ marginTop: '12px', textAlign: 'center', marginBottom: '3rem' }}>
+          <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '14px', color: '#6D6E71', marginBottom: '12px' }}>
+            Dacă preferi contactul direct, ne poți scrie la:
+          </p>
+
+          <a href="mailto:academy@monza-ares.ro"
+            style={{
+              display: 'inline-block',
+              color: '#ED3224',
+              fontWeight: 400,
+              fontSize: '15px',
+              textDecoration: 'none',
+              border: '1px solid #ED3224',
+              borderRadius: '50px',
+              padding: '8px 24px',
+            }}
+          >
+            academy@monza-ares.ro
+          </a>
+        </div>
       </div>
     </main>
   )

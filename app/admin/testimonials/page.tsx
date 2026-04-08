@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { getTestimonials, createTestimonial, updateTestimonial, uploadTestimonialImage, deleteTestimonial } from '@/lib/api'
+import { getTestimonials, createTestimonial, updateTestimonial, uploadTestimonialImage, uploadTestimonialVideo, deleteTestimonial } from '@/lib/api'
 import { storageUrl } from '@/lib/api'
 import type { BackendTestimonial } from '@/types'
 
@@ -58,6 +58,16 @@ export default function TestimonialsAdminPage() {
       setList(l => l.map(x => x.id === id ? { ...x, image: url } : x))
       if (editing?.id === id) setEditing(t => t ? { ...t, image: url } : t)
     } catch { alert('Eroare la upload') } finally { setUploading(false) }
+  }
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>, id: number) => {
+    const file = e.target.files?.[0]; if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadTestimonialVideo(id, file)
+      setList(l => l.map(x => x.id === id ? { ...x, video: url } : x))
+      if (editing?.id === id) setEditing(t => t ? { ...t, video: url } : t)
+    } catch { alert('Eroare la upload video') } finally { setUploading(false) }
   }
 
   const handleDelete = async (id: number) => {
@@ -125,59 +135,51 @@ export default function TestimonialsAdminPage() {
                 margin: 0
               }}>{creating ? 'Testimonial nou' : 'Editează testimonial'}</h2>
 
-              {/* Image upload (only for existing) */}
+              {/* Media upload (only for existing) */}
               {editing && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {/* Image */}
                   <div>
-                    <Label>Fotografie</Label>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1rem',
-                      padding: '0.75rem',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      background: '#f8fafc'
-                    }}>
+                    <Label>Fotografie {editing.video && <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(ignorată dacă există video)</span>}</Label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f8fafc' }}>
                       {editing.image
-                          ? <img src={storageUrl(editing.image) ?? editing.image} alt="" style={{
-                            width: '72px',
-                            height: '72px',
-                            objectFit: 'cover',
-                            borderRadius: '8px',
-                            flexShrink: 0
-                          }}/>
-                          : <div style={{
-                            width: '72px',
-                            height: '72px',
-                            background: '#e5e7eb',
-                            borderRadius: '8px',
-                            flexShrink: 0
-                          }}/>
+                        ? <img src={storageUrl(editing.image) ?? editing.image} alt="" style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
+                        : <div style={{ width: '72px', height: '72px', background: '#e5e7eb', borderRadius: '8px', flexShrink: 0 }} />
                       }
-                      <label style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.4rem',
-                        padding: '0.45rem 0.9rem',
-                        background: uploading ? '#e5e7eb' : '#065EA6',
-                        color: uploading ? '#6D6E71' : '#fff',
-                        borderRadius: '8px',
-                        cursor: uploading ? 'default' : 'pointer',
-                        fontSize: '0.8rem',
-                        fontFamily: '"Roboto",sans-serif'
-                      }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             strokeWidth="2">
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', background: uploading ? '#e5e7eb' : '#065EA6', color: uploading ? '#6D6E71' : '#fff', borderRadius: '8px', cursor: uploading ? 'default' : 'pointer', fontSize: '0.8rem', fontFamily: '"Roboto",sans-serif' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                           <polyline points="17 8 12 3 7 8"/>
                           <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
                         {uploading ? 'Se încarcă...' : 'Încarcă fotografie'}
-                        <input type="file" accept="image/*" style={{display: 'none'}} disabled={uploading}
-                               onChange={e => handleImageUpload(e, editing.id)}/>
+                        <input type="file" accept="image/*" style={{ display: 'none' }} disabled={uploading} onChange={e => handleImageUpload(e, editing.id)} />
                       </label>
                     </div>
                   </div>
+
+                  {/* Video */}
+                  <div>
+                    <Label>Video <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(mp4, webm — dacă este setat, înlocuiește fotografia)</span></Label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f8fafc' }}>
+                      {editing.video
+                        ? <video src={storageUrl(editing.video) ?? editing.video} style={{ width: '120px', height: '72px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} muted />
+                        : <div style={{ width: '120px', height: '72px', background: '#e5e7eb', borderRadius: '8px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                          </div>
+                      }
+                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', background: uploading ? '#e5e7eb' : '#065EA6', color: uploading ? '#6D6E71' : '#fff', borderRadius: '8px', cursor: uploading ? 'default' : 'pointer', fontSize: '0.8rem', fontFamily: '"Roboto",sans-serif' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                          <polyline points="17 8 12 3 7 8"/>
+                          <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        {uploading ? 'Se încarcă...' : 'Încarcă video'}
+                        <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" style={{ display: 'none' }} disabled={uploading} onChange={e => handleVideoUpload(e, editing.id)} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
               )}
               <div><Label>Subtitlu secțiune <span
                   style={{fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71'}}>(Enter = linie nouă)</span></Label><textarea

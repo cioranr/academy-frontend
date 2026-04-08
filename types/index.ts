@@ -63,7 +63,7 @@ export interface BackendUser {
 }
 export interface BackendTestimonial {
   id: number; title: string; subtitle: string | null; doctor_name: string; quote: string
-  workshop_title: string | null; workshop_href: string | null; image: string | null
+  workshop_title: string | null; workshop_href: string | null; image: string | null; video: string | null
   active: boolean; order: number; created_at: string; updated_at: string
 }
 export interface Degree {

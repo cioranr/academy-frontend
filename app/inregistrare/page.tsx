@@ -11,7 +11,7 @@ export default function InregistrarePage() {
   const router = useRouter()
   const { getToken } = useRecaptcha()
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', password_confirmation: '', phone: '', specialty: '', professional_grade: '', cuim: '' })
-  const showCuim = ['medic-specialist', 'medic-primar'].includes(form.professional_grade)
+  const showCuim = ['medic-specialist', 'medic-primar'].includes(form.professional_grade) && form.specialty !== 'rezidenti'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm(p => ({ ...p, [k]: e.target.value }))

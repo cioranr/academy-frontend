@@ -14,6 +14,7 @@ export function Testimonial({ data }: TestimonialProps) {
   const quote         = data?.quote        ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sit amet quam eu tortor molestie consectetur. Proin ullamcorper nisi eget dolor fermentum, a tempus enim luctus.'
   const workshopTitle = data?.workshop_title ?? 'Workshop Interactiv X'
   const workshopHref  = data?.workshop_href  ?? '/workshop'
+  const videoSrc      = storageUrl(data?.video)
   const imageSrc      = storageUrl(data?.image) ?? '/testimonial.png'
   return (
     <section className="bg-white py-16">
@@ -35,18 +36,28 @@ export function Testimonial({ data }: TestimonialProps) {
         {/* Card */}
         <div style={{ borderRadius: '20px 20px 0 0', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
 
-          {/* Imagine */}
-          <div className="relative w-full" style={{ height: '380px' }}>
-            <Image
-              src={imageSrc}
-              alt={doctorName}
-              fill
-              quality={90}
-              loading="eager"
-              className="object-cover object-top"
-              unoptimized={imageSrc.startsWith('http')}
-            />
-          </div>
+          {/* Video or Image */}
+          {videoSrc ? (
+            <div className="relative w-full" style={{ height: '380px', background: '#000' }}>
+              <video
+                src={videoSrc}
+                controls
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+          ) : (
+            <div className="relative w-full" style={{ height: '380px' }}>
+              <Image
+                src={imageSrc}
+                alt={doctorName}
+                fill
+                quality={90}
+                loading="eager"
+                className="object-cover object-top"
+                unoptimized={imageSrc.startsWith('http')}
+              />
+            </div>
+          )}
 
           {/* Text */}
           <div className="px-8 py-8" style={{ background: '#f7f7f7' }}>
