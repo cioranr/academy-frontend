@@ -34,7 +34,7 @@ export function FeaturedWorkshop({ event }: FeaturedWorkshopProps) {
           {/* Card gri */}
           <div
             className="bg-[#F7F7F7] w-full max-w-[1000px] px-4 md:px-8 pt-6 pb-6"
-            style={{ marginTop: 'clamp(-110px, -6vw, -60px)', borderRadius: '0 0 25px 25px' }}
+            style={{ marginTop: 'clamp(-70px, -6vw, -60px)', borderRadius: '0 0 25px 25px' }}
           >
 
             {/* Workshop */}
