@@ -17,17 +17,17 @@ async function fetchEvents(): Promise<BackendEvent[]> {
   } catch { return [] }
 }
 
-async function fetchTestimonial(): Promise<BackendTestimonial | null> {
+async function fetchTestimonials(): Promise<BackendTestimonial[]> {
   try {
     const res = await fetch(`${API}/testimonials`)
-    if (!res.ok) return null
+    if (!res.ok) return []
     const list: BackendTestimonial[] = await res.json()
-    return list.find(t => t.active) ?? null
-  } catch { return null }
+    return list.filter(t => t.active)
+  } catch { return [] }
 }
 
 export default async function HomePage() {
-  const [events, testimonial] = await Promise.all([fetchEvents(), fetchTestimonial()])
+  const [events, testimonials] = await Promise.all([fetchEvents(), fetchTestimonials()])
   const featured = events[0] ?? null
 
   return (
@@ -36,7 +36,7 @@ export default async function HomePage() {
       <FeaturedWorkshop event={featured} />
       <About />
       <EventsCarousel events={events} />
-      <Testimonial data={testimonial} />
+      <Testimonial data={testimonials} />
     </>
   )
 }

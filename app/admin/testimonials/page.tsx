@@ -7,7 +7,18 @@ import type { BackendTestimonial } from '@/types'
 const inp = { padding: '0.65rem 1rem', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '0.85rem', background: '#fff', fontFamily: '"Roboto",sans-serif', color: '#000', width: '100%', outline: 'none' }
 const Label = ({ children }: { children: React.ReactNode }) => <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#374151', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{children}</label>
 
-const EMPTY = { subtitle: '', doctor_name: '', quote: '', workshop_title: '', workshop_href: '', active: true, order: 0 }
+const EMPTY = { subtitle: '', doctor_name: '', quote: '', workshop_title: '', workshop_href: '', youtube_url: '', active: true, order: 0 }
+
+function extractYoutubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+  ]
+  for (const p of patterns) {
+    const m = url.match(p)
+    if (m) return m[1]
+  }
+  return null
+}
 
 export default function TestimonialsAdminPage() {
   const [list, setList]           = useState<BackendTestimonial[]>([])
@@ -29,7 +40,6 @@ export default function TestimonialsAdminPage() {
       const t = await createTestimonial(form)
       setList(l => [...l, t])
       setCreating(false)
-      // Switch immediately to edit so image upload is available
       openEdit(t)
     } catch { alert('Eroare la creare') } finally { setSaving(false) }
   }
@@ -80,8 +90,10 @@ export default function TestimonialsAdminPage() {
   const openEdit = (t: BackendTestimonial) => {
     setEditing(t)
     setCreating(false)
-    setForm({ subtitle: t.subtitle || '', doctor_name: t.doctor_name, quote: t.quote, workshop_title: t.workshop_title || '', workshop_href: t.workshop_href || '', active: t.active, order: t.order })
+    setForm({ subtitle: t.subtitle || '', doctor_name: t.doctor_name, quote: t.quote, workshop_title: t.workshop_title || '', workshop_href: t.workshop_href || '', youtube_url: t.youtube_url || '', active: t.active, order: t.order })
   }
+
+  const youtubePreviewId = form.youtube_url ? extractYoutubeId(form.youtube_url) : null
 
   return (
     <div style={{ maxWidth: '900px' }}>
@@ -99,11 +111,14 @@ export default function TestimonialsAdminPage() {
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                 {t.image
                   ? <img src={storageUrl(t.image) ?? t.image} alt="" style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
-                  : <div style={{ width: '56px', height: '56px', borderRadius: '8px', background: '#e5e7eb', flexShrink: 0 }} />
+                  : <div style={{ width: '56px', height: '56px', borderRadius: '8px', background: '#e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {t.youtube_url && <svg width="18" height="18" viewBox="0 0 24 24" fill="#ED3224"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-2.75 12.64 12.64 0 00-8.64 0A4.83 4.83 0 013.41 6.69 28.1 28.1 0 003 12a28.1 28.1 0 00.41 5.31 4.83 4.83 0 003.77 2.75 12.64 12.64 0 008.64 0 4.83 4.83 0 003.77-2.75A28.1 28.1 0 0021 12a28.1 28.1 0 00-.41-5.31zM10 15V9l5 3-5 3z"/></svg>}
+                    </div>
                 }
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 500, fontSize: '0.9rem', color: '#000' }}>{t.doctor_name}</div>
                   <div style={{ fontSize: '0.75rem', color: '#6D6E71', fontWeight: 300, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{t.quote}</div>
+                  {t.youtube_url && <div style={{ fontSize: '0.7rem', color: '#ED3224', marginTop: '0.15rem' }}>YouTube</div>}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-end' }}>
                   <button onClick={e => { e.stopPropagation(); handleToggleActive(t) }} style={{ padding: '0.25rem 0.6rem', background: t.active ? '#d1fae5' : '#f3f4f6', color: t.active ? '#065f46' : '#6D6E71', border: 'none', borderRadius: '20px', fontSize: '0.7rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', whiteSpace: 'nowrap' }}>
@@ -140,7 +155,7 @@ export default function TestimonialsAdminPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {/* Image */}
                   <div>
-                    <Label>Fotografie {editing.video && <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(ignorată dacă există video)</span>}</Label>
+                    <Label>Fotografie {(editing.video || editing.youtube_url) && <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(ignorată dacă există video sau YouTube)</span>}</Label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f8fafc' }}>
                       {editing.image
                         ? <img src={storageUrl(editing.image) ?? editing.image} alt="" style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
@@ -160,7 +175,7 @@ export default function TestimonialsAdminPage() {
 
                   {/* Video */}
                   <div>
-                    <Label>Video <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(mp4, webm — dacă este setat, înlocuiește fotografia)</span></Label>
+                    <Label>Video <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(mp4, webm — prioritate față de fotografie; ignorat dacă există YouTube)</span></Label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f8fafc' }}>
                       {editing.video
                         ? <video src={storageUrl(editing.video) ?? editing.video} style={{ width: '120px', height: '72px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} muted />
@@ -181,6 +196,33 @@ export default function TestimonialsAdminPage() {
                   </div>
                 </div>
               )}
+
+              {/* YouTube URL */}
+              <div>
+                <Label>
+                  Link YouTube <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(prioritate maximă — înlocuiește video și fotografie)</span>
+                </Label>
+                <input
+                  style={inp}
+                  placeholder="https://www.youtube.com/watch?v=... sau https://youtu.be/..."
+                  value={form.youtube_url || ''}
+                  onChange={set('youtube_url')}
+                />
+                {youtubePreviewId && (
+                  <div style={{ marginTop: '0.5rem', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${youtubePreviewId}`}
+                      style={{ width: '100%', height: '200px', border: 'none', display: 'block' }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                )}
+                {form.youtube_url && !youtubePreviewId && (
+                  <p style={{ fontSize: '0.72rem', color: '#ED3224', marginTop: '0.3rem', margin: '0.3rem 0 0' }}>Link YouTube invalid — verifică formatul URL-ului.</p>
+                )}
+              </div>
+
               <div><Label>Subtitlu secțiune <span
                   style={{fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71'}}>(Enter = linie nouă)</span></Label><textarea
                   style={{...inp, height: '60px', resize: 'vertical'}} value={form.subtitle || ''}
