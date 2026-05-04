@@ -25,16 +25,19 @@ export interface HeroData {
 // ── Backend API types ────────────────────────────────────────────────────────
 export interface BackendEvent {
   id: number; title: string; subtitle: string | null; description: string | null
-  slug: string; date: string; time_start: string | null; time_end: string | null
+  slug: string; date: string; end_date: string | null; time_start: string | null; time_end: string | null
   location: string | null; venue: string | null; credits: number | null
   credits_label: string | null; image: string | null; image_small: string | null; image_big: string | null
   status: 'draft' | 'published' | 'cancelled'; max_participants: number | null
   created_by: number | null; created_at: string; updated_at: string
   meta_title: string | null; meta_description: string | null; schema_org: string | null
+  fully_booked_message: string | null; show_fully_booked_message: boolean
+  cmr_address: string | null
   speakers?: EventSpeaker[]; sessions?: EventSession[]; directors?: EventSpeaker[]
 }
 export interface Doctor {
   id: number; name: string; specialty: string | null; image: string | null
+  signature: string | null
   slug: string | null; bio: string | null; created_at: string; updated_at: string
 }
 export interface EventSpeaker {
@@ -44,6 +47,7 @@ export interface EventSpeaker {
 }
 export interface EventSession {
   id: number; event_id: number; time_label: string; title: string; order: number
+  day_index: number
   items?: EventSessionItem[]
 }
 export interface EventSessionItem { id: number; event_session_id: number; content: string; order: number }

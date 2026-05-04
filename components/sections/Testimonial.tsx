@@ -132,29 +132,106 @@ export function Testimonial({ data }: TestimonialProps) {
           </p>
         )}
 
-        {/* Card */}
-        <TestimonialCard t={t} />
+        {/* Card with side arrows (only when multiple) */}
+        <div style={{ position: 'relative' }}>
+          <TestimonialCard t={t} />
 
-        {/* Navigation dots (only when multiple) */}
-        {active.length > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem', marginTop: '1.5rem' }}>
-            {active.map((_, i) => (
+          {active.length > 1 && (
+            <>
               <button
-                key={i}
-                onClick={() => setCurrent(i)}
-                aria-label={`Testimonial ${i + 1}`}
+                onClick={() => setCurrent((current - 1 + active.length) % active.length)}
+                aria-label="Anterior"
                 style={{
-                  width: i === current ? '28px' : '10px',
-                  height: '10px',
-                  borderRadius: '5px',
+                  position: 'absolute',
+                  left: '-22px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
                   border: 'none',
-                  background: i === current ? '#065EA6' : '#D1D5DB',
+                  background: '#fff',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   cursor: 'pointer',
-                  padding: 0,
-                  transition: 'width 0.2s, background 0.2s',
+                  zIndex: 2,
                 }}
-              />
-            ))}
+                className="hidden sm:flex"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M10 2L4 8L10 14" stroke="#065EA6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setCurrent((current + 1) % active.length)}
+                aria-label="Următor"
+                style={{
+                  position: 'absolute',
+                  right: '-22px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: '#fff',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  zIndex: 2,
+                }}
+                className="hidden sm:flex"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 2L12 8L6 14" stroke="#065EA6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Mobile arrows + dots row */}
+        {active.length > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+            <button
+              onClick={() => setCurrent((current - 1 + active.length) % active.length)}
+              aria-label="Anterior"
+              className="flex sm:hidden"
+              style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #D1D5DB', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M10 2L4 8L10 14" stroke="#065EA6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
+              {active.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  aria-label={`Testimonial ${i + 1}`}
+                  style={{
+                    width: i === current ? '28px' : '10px',
+                    height: '10px',
+                    borderRadius: '5px',
+                    border: 'none',
+                    background: i === current ? '#065EA6' : '#D1D5DB',
+                    cursor: 'pointer',
+                    padding: 0,
+                    transition: 'width 0.2s, background 0.2s',
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrent((current + 1) % active.length)}
+              aria-label="Următor"
+              className="flex sm:hidden"
+              style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #D1D5DB', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M6 2L12 8L6 14" stroke="#065EA6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
           </div>
         )}
 

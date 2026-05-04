@@ -2,7 +2,7 @@
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { getEvent, updateEvent, uploadEventImage, createSpeaker, updateSpeaker, uploadSpeakerImage, deleteSpeaker, createSession, deleteSession, createSessionItem, deleteSessionItem, getDoctors, createDoctor, updateDoctor, uploadDoctorImage } from '@/lib/api'
+import { getEvent, updateEvent, uploadEventImage, createSpeaker, updateSpeaker, uploadSpeakerImage, deleteSpeaker, createSession, deleteSession, createSessionItem, deleteSessionItem, getDoctors, createDoctor, updateDoctor, uploadDoctorImage, uploadDoctorSignature } from '@/lib/api'
 import { storageUrl } from '@/lib/api'
 import type { BackendEvent, EventSpeaker, EventSession, Doctor } from '@/types'
 
@@ -33,10 +33,11 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   const [editingSpeaker, setEditingSpeaker] = useState<EventSpeaker | null>(null)
   const [editSpeakerForm, setEditSpeakerForm] = useState<Partial<EventSpeaker>>({})
   const [uploadingSpeakerImg, setUploadingSpeakerImg] = useState(false)
+  const [uploadingDoctorSig, setUploadingDoctorSig] = useState(false)
   const [newDoctorForm, setNewDoctorForm] = useState({ name: '', specialty: '', slug: '', bio: '' })
   const [creatingDoctor, setCreatingDoctor] = useState(false)
   const [newSpeaker, setNewSpeaker] = useState({ name: '', specialty: '', image: '', slug: '', speaker_role: 'speaker' as const })
-  const [newSession, setNewSession] = useState({ time_label: '', title: '' })
+  const [newSession, setNewSession] = useState({ time_label: '', title: '', day_index: 0 })
   const [newItems, setNewItems] = useState<Record<number, string>>({})
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm(p => ({ ...p, [k]: e.target.value }))
 
@@ -45,7 +46,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   useEffect(() => {
     getEvent(id).then(ev => {
       setEvent(ev)
-      setForm({ title: ev.title, subtitle: ev.subtitle || '', description: ev.description || '', date: ev.date?.split('T')[0] || '', time_start: ev.time_start || '', time_end: ev.time_end || '', location: ev.location || '', venue: ev.venue || '', credits: ev.credits, credits_label: ev.credits_label || '', image: ev.image || '', image_small: ev.image_small || '', image_big: ev.image_big || '', status: ev.status, max_participants: ev.max_participants })
+      setForm({ title: ev.title, slug: ev.slug || '', subtitle: ev.subtitle || '', description: ev.description || '', date: ev.date?.split('T')[0] || '', end_date: ev.end_date?.split('T')[0] || '', time_start: ev.time_start || '', time_end: ev.time_end || '', location: ev.location || '', venue: ev.venue || '', credits: ev.credits, credits_label: ev.credits_label || '', image: ev.image || '', image_small: ev.image_small || '', image_big: ev.image_big || '', status: ev.status, max_participants: ev.max_participants, fully_booked_message: ev.fully_booked_message || '', show_fully_booked_message: !!ev.show_fully_booked_message, cmr_address: ev.cmr_address || '' })
       setSeoForm({ meta_title: ev.meta_title || '', meta_description: ev.meta_description || '', schema_org: ev.schema_org || '' })
     })
   }, [id])
@@ -119,6 +120,16 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
       if (editingSpeaker?.id === speaker.id) setEditingSpeaker(s => s ? { ...s, image: url } : s)
     } catch { alert('Eroare la upload') } finally { setUploadingSpeakerImg(false) }
   }
+  const handleDoctorSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>, doctor: Doctor) => {
+    const file = e.target.files?.[0]; if (!file) return
+    setUploadingDoctorSig(true)
+    try {
+      const url = await uploadDoctorSignature(doctor.id, file)
+      const updated = { ...doctor, signature: url }
+      setDoctors(d => d.map(x => x.id === doctor.id ? updated : x))
+      if (editingDoctor?.id === doctor.id) setEditingDoctor(updated)
+    } catch { alert('Eroare la upload semnătură') } finally { setUploadingDoctorSig(false) }
+  }
   const handleSaveSpeaker = async () => {
     if (!editingSpeaker) return
     try {
@@ -138,7 +149,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   }
   const handleAddSession = async () => {
     if (!newSession.time_label || !newSession.title) return
-    try { const s = await createSession(event!.id, { ...newSession, order: (event?.sessions?.length || 0) }); setEvent(ev => ev ? { ...ev, sessions: [...(ev.sessions || []), s] } : ev); setNewSession({ time_label: '', title: '' }) } catch {}
+    try { const s = await createSession(event!.id, { ...newSession, order: (event?.sessions?.length || 0) }); setEvent(ev => ev ? { ...ev, sessions: [...(ev.sessions || []), s] } : ev); setNewSession(p => ({ time_label: '', title: '', day_index: p.day_index })) } catch {}
   }
   const handleDeleteSession = async (sid: number) => {
     await deleteSession(sid); setEvent(ev => ev ? { ...ev, sessions: ev.sessions?.filter(s => s.id !== sid) } : ev)
@@ -178,22 +189,42 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div style={{ gridColumn: '1/-1' }}><Label>Titlu</Label><input style={inp} value={form.title || ''} onChange={set('title')} /></div>
+              <div style={{ gridColumn: '1/-1' }}>
+                <Label>Slug URL <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(folosit în adresa /events/{form.slug || '...'})</span></Label>
+                <input style={inp} value={form.slug || ''} onChange={set('slug')} placeholder="ex: workshop-cardio-2026" />
+              </div>
               <div style={{ gridColumn: '1/-1' }}><Label>Subtitlu <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(Enter = linie nouă)</span></Label><textarea style={{ ...inp, height: '72px', resize: 'vertical' }} value={form.subtitle || ''} onChange={set('subtitle')} /></div>
               <div style={{ gridColumn: '1/-1' }}><Label>Descriere</Label><textarea style={{ ...inp, height: '100px', resize: 'vertical' }} value={form.description || ''} onChange={set('description')} /></div>
-              <div><Label>Data</Label><input type="date" style={inp} value={typeof form.date === 'string' ? form.date.split('T')[0] : ''} onChange={set('date')} /></div>
+              <div><Label>Data start</Label><input type="date" style={inp} value={typeof form.date === 'string' ? form.date.split('T')[0] : ''} onChange={set('date')} /></div>
+              <div><Label>Data sfârșit <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(opțional)</span></Label><input type="date" style={inp} min={typeof form.date === 'string' ? form.date.split('T')[0] : undefined} value={typeof form.end_date === 'string' ? form.end_date.split('T')[0] : ''} onChange={set('end_date')} /></div>
               <div><Label>Status</Label><select style={{ ...inp, cursor: 'pointer' }} value={form.status || 'draft'} onChange={set('status')}><option value="draft">Ciornă</option><option value="published">Publicat</option><option value="cancelled">Anulat</option></select></div>
               <div><Label>Ora start</Label><input type="time" style={inp} value={form.time_start || ''} onChange={set('time_start')} /></div>
               <div><Label>Ora final</Label><input type="time" style={inp} value={form.time_end || ''} onChange={set('time_end')} /></div>
               <div><Label>Locație</Label><input style={inp} value={form.location || ''} onChange={set('location')} /></div>
               <div><Label>Venue</Label><input style={inp} value={form.venue || ''} onChange={set('venue')} /></div>
-              <div><Label>Puncte EMC</Label><input type="number" style={inp} value={form.credits || ''} onChange={set('credits')} /></div>
+              <div><Label>Puncte EMC <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(opțional)</span></Label><input type="number" style={inp} value={form.credits ?? ''} onChange={e => setForm(p => ({ ...p, credits: e.target.value === '' ? null : Number(e.target.value) }))} /></div>
               <div><Label>Text EMC</Label><input style={inp} value={form.credits_label || ''} onChange={set('credits_label')} /></div>
+              <div style={{ gridColumn: '1/-1' }}><Label>Adresă CMR <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(referință scrisoare CMR — apare pe diplomă)</span></Label><input style={inp} value={form.cmr_address || ''} onChange={set('cmr_address')} /></div>
               <div><Label>Max. participanți</Label><input type="number" style={inp} value={form.max_participants || ''} onChange={set('max_participants')} /></div>
+              <div style={{ gridColumn: '1/-1' }}>
+                <Label>Mesaj „Locuri epuizate"</Label>
+                <textarea style={{ ...inp, height: '90px', resize: 'vertical' }} placeholder="ex: Locurile pentru acest eveniment au fost epuizate. Vă mulțumim pentru interes!" value={form.fully_booked_message || ''} onChange={set('fully_booked_message')} />
+              </div>
+              <div style={{ gridColumn: '1/-1' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', userSelect: 'none' }}>
+                  <span style={{ position: 'relative', display: 'inline-block', width: '40px', height: '22px' }}>
+                    <input type="checkbox" checked={!!form.show_fully_booked_message} onChange={e => setForm(p => ({ ...p, show_fully_booked_message: e.target.checked }))} style={{ opacity: 0, width: 0, height: 0 }} />
+                    <span style={{ position: 'absolute', inset: 0, background: form.show_fully_booked_message ? '#065EA6' : '#cbd5e1', borderRadius: '999px', transition: 'background 0.2s' }} />
+                    <span style={{ position: 'absolute', top: '3px', left: form.show_fully_booked_message ? '21px' : '3px', width: '16px', height: '16px', background: '#fff', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }} />
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: '#374151' }}>Afișează mesajul pe pagina evenimentului (înlocuiește butonul de înscriere)</span>
+                </label>
+              </div>
               {([
-                { key: 'image',       label: 'Imagine principală',       type: 'main'  as const, uploading: uploadingImage,      setUploading: setUploadingImage },
-                { key: 'image_small', label: 'Imagine mică (thumbnail)', type: 'small' as const, uploading: uploadingImageSmall, setUploading: setUploadingImageSmall },
-                { key: 'image_big',   label: 'Imagine mare (banner)',    type: 'big'   as const, uploading: uploadingImageBig,   setUploading: setUploadingImageBig },
-              ] as const).map(({ key, label, type, uploading }) => (
+                { key: 'image',       label: 'Imagine principală',       type: 'main'  as const, uploading: uploadingImage,      setUploading: setUploadingImage,      size: '1024 × 1024 px (1:1)' },
+                { key: 'image_small', label: 'Imagine mică (thumbnail)', type: 'small' as const, uploading: uploadingImageSmall, setUploading: setUploadingImageSmall, size: '1024 × 1024 px (1:1)' },
+                { key: 'image_big',   label: 'Imagine mare (banner)',    type: 'big'   as const, uploading: uploadingImageBig,   setUploading: setUploadingImageBig,   size: '1920 × 1080 px (HD, 16:9)' },
+              ] as const).map(({ key, label, type, uploading, size }) => (
                 <div key={key} style={{ gridColumn: '1/-1' }}>
                   <Label>{label}</Label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', border: '1px solid #e5e7eb', borderRadius: '8px', background: '#f8fafc' }}>
@@ -214,7 +245,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
                         {uploading ? 'Se încarcă...' : 'Încarcă imagine'}
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleImageUpload(e, type)} disabled={uploading} />
                       </label>
-                      <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: '#6D6E71', fontWeight: 300 }}>JPG, PNG, WebP · max 5MB</p>
+                      <p style={{ margin: '0.35rem 0 0', fontSize: '0.75rem', color: '#6D6E71', fontWeight: 300 }}>JPG, PNG, WebP · max 5MB · recomandat {size}</p>
                     </div>
                   </div>
                 </div>
@@ -263,6 +294,9 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
                           {uploadingSpeakerImg ? 'Se încarcă...' : 'Schimbă poza'}
                           <input type="file" accept="image/*" style={{ display: 'none' }} disabled={uploadingSpeakerImg} onChange={e => handleSpeakerImageUpload(e, editingSpeaker)} />
                         </label>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#6D6E71', fontWeight: 300, padding: '0.5rem 0.75rem', background: '#fff', borderRadius: '8px' }}>
+                        Semnătura folosită pe diplomă se încarcă în <strong>Baza de doctori</strong>, pe medicul respectiv.
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                         <input style={inp} placeholder="Nume" value={editSpeakerForm.name || ''} onChange={e => setEditSpeakerForm(p => ({ ...p, name: e.target.value }))} />
@@ -317,6 +351,18 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
                           {uploadingDoctorImg ? 'Se încarcă...' : 'Schimbă poza'}
                           <input type="file" accept="image/*" style={{ display: 'none' }} disabled={uploadingDoctorImg} onChange={e => handleDoctorImageUpload(e, editingDoctor)} />
                         </label>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: '#fff', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
+                        {editingDoctor.signature
+                          ? <img src={storageUrl(editingDoctor.signature) ?? editingDoctor.signature} alt="semnătură" style={{ height: '40px', maxWidth: '120px', objectFit: 'contain', flexShrink: 0 }} />
+                          : <div style={{ height: '40px', width: '120px', background: '#f3f4f6', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: '#9CA3AF', flexShrink: 0 }}>Semnătură</div>
+                        }
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.9rem', background: uploadingDoctorSig ? '#e5e7eb' : '#065EA6', color: uploadingDoctorSig ? '#6D6E71' : '#fff', borderRadius: '8px', cursor: uploadingDoctorSig ? 'default' : 'pointer', fontSize: '0.8rem', fontFamily: '"Roboto",sans-serif' }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          {uploadingDoctorSig ? 'Se încarcă...' : (editingDoctor.signature ? 'Schimbă semnătura' : 'Încarcă semnătura')}
+                          <input type="file" accept="image/*" style={{ display: 'none' }} disabled={uploadingDoctorSig} onChange={e => handleDoctorSignatureUpload(e, editingDoctor)} />
+                        </label>
+                        <span style={{ fontSize: '0.7rem', color: '#6D6E71', fontWeight: 300, flex: 1 }}>folosită pe diplomă când medicul este director (PNG cu fundal transparent recomandat)</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                         <input style={inp} placeholder="Nume" value={editDoctorForm.name || ''} onChange={e => setEditDoctorForm(p => ({ ...p, name: e.target.value }))} />
@@ -388,42 +434,67 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         </Section>
       )}
 
-      {tab === 'schedule' && (
-        <Section title="Program / Sesiuni">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-            {event.sessions?.map(s => (
-              <div key={s.id} style={{ border: '1px solid #e5e7eb', borderRadius: '10px', overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#065EA6', minWidth: '90px' }}>{s.time_label}</span>
-                  <span style={{ fontWeight: 400, fontSize: '0.9rem', flex: 1 }}>{s.title}</span>
-                  <button onClick={() => handleDeleteSession(s.id)} style={{ background: '#fde8e8', color: '#ED3224', border: 'none', borderRadius: '6px', padding: '0.3rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Șterge</button>
-                </div>
-                <div style={{ padding: '0.75rem 1rem' }}>
-                  {s.items?.map(item => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.3rem 0' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#6D6E71', fontWeight: 300, flex: 1 }}>• {item.content}</span>
-                      <button onClick={() => handleDeleteItem(s.id, item.id)} style={{ background: 'none', color: '#ED3224', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontFamily: '"Roboto",sans-serif' }}>×</button>
-                    </div>
-                  ))}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <input style={{ ...inp, flex: 1, padding: '0.45rem 0.75rem', fontSize: '0.8rem' }} placeholder="Adaugă subiect..." value={newItems[s.id] || ''} onChange={e => setNewItems(p => ({ ...p, [s.id]: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAddItem(s)} />
-                    <button onClick={() => handleAddItem(s)} style={{ padding: '0.45rem 0.75rem', background: '#ecffff', color: '#065EA6', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontFamily: '"Roboto",sans-serif' }}>+</button>
+      {tab === 'schedule' && (() => {
+        const start = form.date ? new Date(typeof form.date === 'string' ? form.date.split('T')[0] : form.date) : null
+        const endStr = typeof form.end_date === 'string' ? form.end_date.split('T')[0] : ''
+        const end = endStr ? new Date(endStr) : null
+        const dayCount = start && end ? Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1) : 1
+        const dayLabels = Array.from({ length: dayCount }, (_, i) => {
+          if (!start) return `Ziua ${i + 1}`
+          const d = new Date(start.getTime()); d.setDate(start.getDate() + i)
+          return `Ziua ${i + 1} — ${d.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long' })}`
+        })
+        const sessionsByDay: Record<number, EventSession[]> = {}
+        event.sessions?.forEach(s => { const d = s.day_index || 0; (sessionsByDay[d] ||= []).push(s) })
+        return (
+          <Section title="Program / Sesiuni">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              {Array.from({ length: dayCount }, (_, di) => (
+                <div key={di}>
+                  {dayCount > 1 && <div style={{ fontWeight: 500, fontSize: '0.85rem', color: '#065EA6', margin: '0 0 0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{dayLabels[di]}</div>}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {(sessionsByDay[di] || []).map(s => (
+                      <div key={s.id} style={{ border: '1px solid #e5e7eb', borderRadius: '10px', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#065EA6', minWidth: '90px' }}>{s.time_label}</span>
+                          <span style={{ fontWeight: 400, fontSize: '0.9rem', flex: 1 }}>{s.title}</span>
+                          <button onClick={() => handleDeleteSession(s.id)} style={{ background: '#fde8e8', color: '#ED3224', border: 'none', borderRadius: '6px', padding: '0.3rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Șterge</button>
+                        </div>
+                        <div style={{ padding: '0.75rem 1rem' }}>
+                          {s.items?.map(item => (
+                            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.3rem 0' }}>
+                              <span style={{ fontSize: '0.75rem', color: '#6D6E71', fontWeight: 300, flex: 1 }}>• {item.content}</span>
+                              <button onClick={() => handleDeleteItem(s.id, item.id)} style={{ background: 'none', color: '#ED3224', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontFamily: '"Roboto",sans-serif' }}>×</button>
+                            </div>
+                          ))}
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                            <input style={{ ...inp, flex: 1, padding: '0.45rem 0.75rem', fontSize: '0.8rem' }} placeholder="Adaugă subiect..." value={newItems[s.id] || ''} onChange={e => setNewItems(p => ({ ...p, [s.id]: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAddItem(s)} />
+                            <button onClick={() => handleAddItem(s)} style={{ padding: '0.45rem 0.75rem', background: '#ecffff', color: '#065EA6', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontFamily: '"Roboto",sans-serif' }}>+</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {!(sessionsByDay[di] || []).length && <p style={{ color: '#6D6E71', fontWeight: 300, fontSize: '0.85rem', margin: 0 }}>Nicio sesiune pentru această zi.</p>}
                   </div>
                 </div>
-              </div>
-            ))}
-            {!event.sessions?.length && <p style={{ color: '#6D6E71', fontWeight: 300, fontSize: '0.9rem' }}>Nicio sesiune adăugată.</p>}
-          </div>
-          <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '1rem' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 500, marginBottom: '0.75rem', color: '#374151' }}>Adaugă sesiune</div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <input style={{ ...inp, width: '130px', flexShrink: 0 }} placeholder="ex: 09:00-10:30" value={newSession.time_label} onChange={e => setNewSession(p => ({ ...p, time_label: e.target.value }))} />
-              <input style={{ ...inp, flex: 1 }} placeholder="ex: SESIUNEA I" value={newSession.title} onChange={e => setNewSession(p => ({ ...p, title: e.target.value }))} />
-              <button onClick={handleAddSession} style={{ padding: '0.65rem 1rem', background: '#065EA6', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Adaugă</button>
+              ))}
             </div>
-          </div>
-        </Section>
-      )}
+            <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '1rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 500, marginBottom: '0.75rem', color: '#374151' }}>Adaugă sesiune</div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                {dayCount > 1 && (
+                  <select style={{ ...inp, width: '170px', flexShrink: 0, cursor: 'pointer' }} value={newSession.day_index} onChange={e => setNewSession(p => ({ ...p, day_index: Number(e.target.value) }))}>
+                    {dayLabels.map((l, i) => <option key={i} value={i}>{l}</option>)}
+                  </select>
+                )}
+                <input style={{ ...inp, width: '130px', flexShrink: 0 }} placeholder="ex: 09:00-10:30" value={newSession.time_label} onChange={e => setNewSession(p => ({ ...p, time_label: e.target.value }))} />
+                <input style={{ ...inp, flex: 1, minWidth: '180px' }} placeholder="ex: SESIUNEA I" value={newSession.title} onChange={e => setNewSession(p => ({ ...p, title: e.target.value }))} />
+                <button onClick={handleAddSession} style={{ padding: '0.65rem 1rem', background: '#065EA6', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Adaugă</button>
+              </div>
+            </div>
+          </Section>
+        )
+      })()}
     </div>
   )
 }

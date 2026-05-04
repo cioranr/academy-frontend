@@ -6,7 +6,7 @@ import { createEvent } from '@/lib/api'
 
 export default function NewEventPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ title: '', subtitle: '', description: '', slug: '', date: '', time_start: '', time_end: '', location: '', venue: '', credits: '', credits_label: '', status: 'draft', max_participants: '' })
+  const [form, setForm] = useState({ title: '', subtitle: '', description: '', slug: '', date: '', end_date: '', time_start: '', time_end: '', location: '', venue: '', credits: '', credits_label: '', status: 'draft', max_participants: '', fully_booked_message: '', show_fully_booked_message: false })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm(p => ({ ...p, [k]: e.target.value }))
@@ -14,7 +14,7 @@ export default function NewEventPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true)
     try {
-      const ev = await createEvent({ ...form, credits: form.credits ? Number(form.credits) : undefined, max_participants: form.max_participants ? Number(form.max_participants) : undefined, subtitle: form.subtitle || undefined, description: form.description || undefined, slug: form.slug || undefined, time_start: form.time_start || undefined, time_end: form.time_end || undefined, location: form.location || undefined, venue: form.venue || undefined, credits_label: form.credits_label || undefined } as never)
+      const ev = await createEvent({ ...form, credits: form.credits ? Number(form.credits) : undefined, max_participants: form.max_participants ? Number(form.max_participants) : undefined, subtitle: form.subtitle || undefined, description: form.description || undefined, slug: form.slug || undefined, end_date: form.end_date || undefined, time_start: form.time_start || undefined, time_end: form.time_end || undefined, location: form.location || undefined, venue: form.venue || undefined, credits_label: form.credits_label || undefined, fully_booked_message: form.fully_booked_message || undefined, show_fully_booked_message: form.show_fully_booked_message } as never)
       router.push(`/admin/events/${ev.id}`)
     } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Eroare') } finally { setLoading(false) }
   }
@@ -36,8 +36,9 @@ export default function NewEventPage() {
             <div style={{ gridColumn: '1/-1' }}><Label>Subtitlu</Label><input style={inp} placeholder="Subtitlu opțional" value={form.subtitle} onChange={set('subtitle')} /></div>
             <div style={{ gridColumn: '1/-1' }}><Label>Descriere</Label><textarea style={{ ...inp, height: '120px', resize: 'vertical' }} placeholder="Descrierea evenimentului..." value={form.description} onChange={set('description')} /></div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-            <div><Label>Data *</Label><input type="date" required style={inp} value={form.date} onChange={set('date')} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>
+            <div><Label>Data start *</Label><input type="date" required style={inp} value={form.date} onChange={set('date')} /></div>
+            <div><Label>Data sfârșit <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(opțional)</span></Label><input type="date" style={inp} min={form.date || undefined} value={form.end_date} onChange={set('end_date')} /></div>
             <div><Label>Ora start</Label><input type="time" style={inp} value={form.time_start} onChange={set('time_start')} /></div>
             <div><Label>Ora final</Label><input type="time" style={inp} value={form.time_end} onChange={set('time_end')} /></div>
           </div>
@@ -56,6 +57,18 @@ export default function NewEventPage() {
             </div>
             <div><Label>Slug URL</Label><input style={inp} placeholder="se generează automat" value={form.slug} onChange={set('slug')} /></div>
           </div>
+          <div>
+            <Label>Mesaj „Locuri epuizate"</Label>
+            <textarea style={{ ...inp, height: '90px', resize: 'vertical' }} placeholder="ex: Locurile pentru acest eveniment au fost epuizate. Vă mulțumim pentru interes!" value={form.fully_booked_message} onChange={set('fully_booked_message')} />
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', userSelect: 'none' }}>
+            <span style={{ position: 'relative', display: 'inline-block', width: '40px', height: '22px' }}>
+              <input type="checkbox" checked={form.show_fully_booked_message} onChange={e => setForm(p => ({ ...p, show_fully_booked_message: e.target.checked }))} style={{ opacity: 0, width: 0, height: 0 }} />
+              <span style={{ position: 'absolute', inset: 0, background: form.show_fully_booked_message ? '#065EA6' : '#cbd5e1', borderRadius: '999px', transition: 'background 0.2s' }} />
+              <span style={{ position: 'absolute', top: '3px', left: form.show_fully_booked_message ? '21px' : '3px', width: '16px', height: '16px', background: '#fff', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }} />
+            </span>
+            <span style={{ fontSize: '0.9rem', color: '#374151' }}>Afișează mesajul pe pagina evenimentului (înlocuiește butonul de înscriere)</span>
+          </label>
         </div>
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
           <button type="submit" disabled={loading} style={{ padding: '0.75rem 2rem', background: '#065EA6', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 400, cursor: 'pointer', fontFamily: '"Roboto",sans-serif', opacity: loading ? 0.7 : 1 }}>

@@ -16,7 +16,7 @@ export default function CalendarPage() {
   }, [])
 
   return (
-    <main style={{ background: '#ecffff', fontFamily: '"Roboto",sans-serif', minHeight: '100vh' }}>
+    <main style={{  fontFamily: '"Roboto",sans-serif', minHeight: '100vh' }}>
       <div className="max-w-[1000px] mx-auto px-4 pt-12 pb-6">
         <h1 style={{ fontFamily: '"Roboto",sans-serif', fontWeight: 300, fontSize: '32px', color: '#6D6E71', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Calendar</h1>
       </div>

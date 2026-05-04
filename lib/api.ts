@@ -81,7 +81,7 @@ export async function deleteEvent(id: number): Promise<void> {
 }
 
 // ── Event sessions ─────────────────────────────────────────────────────────
-export async function createSession(eventId: number, data: { time_label: string; title: string; order?: number }): Promise<EventSession> {
+export async function createSession(eventId: number, data: { time_label: string; title: string; order?: number; day_index?: number }): Promise<EventSession> {
   return apiJson(`/events/${eventId}/sessions`, { method: 'POST', body: JSON.stringify(data) })
 }
 export async function updateSession(sessionId: number, data: Partial<EventSession>): Promise<EventSession> {
@@ -134,6 +134,11 @@ export async function uploadDoctorImage(id: number, file: File): Promise<string>
   const data = await apiJson<{ image: string }>(`/doctors/${id}/image`, { method: 'POST', body: fd })
   return data.image
 }
+export async function uploadDoctorSignature(id: number, file: File): Promise<string> {
+  const fd = new FormData(); fd.append('signature', file)
+  const data = await apiJson<{ signature: string }>(`/doctors/${id}/signature`, { method: 'POST', body: fd })
+  return data.signature
+}
 export async function deleteDoctor(id: number): Promise<void> {
   await apiFetch(`/doctors/${id}`, { method: 'DELETE' })
 }
@@ -154,6 +159,9 @@ export async function cancelRegistration(id: number): Promise<void> {
 }
 export async function deleteRegistration(id: number): Promise<void> {
   await apiFetch(`/registrations/${id}/force`, { method: 'DELETE' })
+}
+export async function generateDiploma(registrationId: number): Promise<Degree> {
+  return apiJson(`/registrations/${registrationId}/generate-diploma`, { method: 'POST' })
 }
 
 // ── Users (admin) ──────────────────────────────────────────────────────────

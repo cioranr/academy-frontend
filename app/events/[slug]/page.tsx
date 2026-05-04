@@ -9,7 +9,7 @@ import { useRecaptcha } from '@/lib/useRecaptcha'
 
 function DoctorCard({ speaker }: { speaker: EventSpeaker }) {
   return (
-    <div className="flex flex-col" style={{ background: '#f5f5f5', height: '462px', flexShrink: 0, width: '306px' }}>
+    <div className="flex flex-col speaker-card" style={{ background: '#f5f5f5', height: '462px', flexShrink: 0, scrollSnapAlign: 'center' }}>
       <div className="relative overflow-hidden" style={{ height: '340px' }}>
         {speaker.image
           ? <Image src={storageUrl(speaker.image) ?? speaker.image} alt={speaker.name} fill quality={75} className="object-cover object-top" sizes="306px" unoptimized={!!storageUrl(speaker.image)} />
@@ -39,6 +39,34 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [activeSpeakerIdx, setActiveSpeakerIdx] = useState(0)
+
+  useEffect(() => {
+    const el = speakersRef.current
+    if (!el) return
+    const onScroll = () => {
+      const cards = el.querySelectorAll<HTMLElement>('.speaker-card')
+      if (!cards.length) return
+      const center = el.scrollLeft + el.clientWidth / 2
+      let bestIdx = 0, bestDist = Infinity
+      cards.forEach((c, i) => {
+        const cardCenter = c.offsetLeft + c.offsetWidth / 2
+        const dist = Math.abs(cardCenter - center)
+        if (dist < bestDist) { bestDist = dist; bestIdx = i }
+      })
+      setActiveSpeakerIdx(bestIdx)
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [event?.speakers?.length])
+
+  const scrollToSpeaker = (idx: number) => {
+    const el = speakersRef.current
+    if (!el) return
+    const card = el.querySelectorAll<HTMLElement>('.speaker-card')[idx]
+    if (!card) return
+    el.scrollTo({ left: card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' })
+  }
 
   useEffect(() => {
     getEvent(slug).then(ev => {
@@ -94,8 +122,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   )
 
   const date = new Date(event.date)
+  const endDate = event.end_date ? new Date(event.end_date) : null
+  const isMultiDay = !!(endDate && endDate.getTime() > date.getTime())
   const day = date.getDate()
   const month = date.toLocaleDateString('ro-RO', { month: 'long' }).toUpperCase()
+  const dayDisplay = isMultiDay
+    ? `${date.getDate()}-${endDate!.getDate()}`
+    : String(day)
+  const monthDisplay = isMultiDay && date.getMonth() !== endDate!.getMonth()
+    ? `${date.toLocaleDateString('ro-RO', { month: 'short' }).toUpperCase()}-${endDate!.toLocaleDateString('ro-RO', { month: 'short' }).toUpperCase()}`
+    : month
   const subtitle = event.subtitle ?? ''
   const location = event.location ?? ''
   const venue = event.venue ?? ''
@@ -104,99 +140,93 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   const imageUrl = storageUrl(event.image)
 
   return (
-    <main style={{ background: '#ecffff', fontFamily: '"Roboto",sans-serif' }}>
+    <main style={{ fontFamily: '"Roboto",sans-serif' }}>
 
       {/* ── HERO ── */}
-      <section style={{ background: '#ecffff', paddingTop: '40px', paddingBottom: '60px' }}>
-        <div className="max-w-[1000px] mx-auto px-4">
+      <section className="relative z-10 w-full">
+        <div className="max-w-[1200px] mx-auto px-4 pt-6 pb-8 relative">
 
-          {/* Workshop */}
-          <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: 'clamp(60px, 12vw, 155px)', color: '#065EA6', lineHeight: 1, letterSpacing: '-3px', display: 'flex', justifyContent: 'end' }}>
-            Workshop
-          </div>
+          {/* Main grid: title (left), info (mid), images (right) */}
+          <div className="md:grid md:gap-6 md:items-center" style={{ gridTemplateColumns: 'minmax(0, 1.6fr) auto minmax(0, 1.1fr)' }}>
 
-          {/* Interactiv + title */}
-          <div className="flex items-center gap-2 mb-4 ml-2 flex-wrap">
-            <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: 'clamp(40px, 9vw, 115px)', color: '#065EA6', }}>
-              Interactiv
-            </span>
-            {event.title && (
-              <span style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 600, fontSize: 'clamp(40px, 9vw, 115px)', color: '#065EA6',}}>
-                {event.title}
-              </span>
-            )}
-          </div>
+            {/* TITLE BLOCK */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: 'clamp(48px, 8vw, 96px)', color: '#065ea6', lineHeight: 0.95, letterSpacing: '-4px' }}>
+                Workshop
+              </div>
+              <div className="flex flex-wrap items-baseline gap-x-3" style={{ marginTop: '4px' }}>
+                <div style={{ borderBottom: '2px solid #065ea6' }}>
+                  <span style={{ fontFamily: '"Playfair Display", Georgia, serif', fontWeight: 500, fontSize: 'clamp(28px, 4.5vw, 52px)', color: '#065ea6', lineHeight: 1, letterSpacing: '-3px' }}>
+                    Interactiv:
+                  </span>
+                  {event.title && (
+                    <span style={{ marginLeft: '10px', fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: 'clamp(16px, 3.2vw, 28px)', color: '#065ea6', lineHeight: 1.1, textTransform: 'uppercase', letterSpacing: '0.01em' }}>
+                      {event.title}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {subtitle && (
+                <div style={{ borderBottom: '2px solid #065ea6', textAlign: 'center' }}>
+                  <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: 'clamp(11px, 1.4vw, 15px)', color: '#065ea6', letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: 1.4 }}>
+                    {subtitle.split('\n').map((line, i, arr) => (
+                      <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+                    ))}
+                  </p>
+                </div>
+              )}
+            </div>
 
-          {/* Separator */}
-          <div className="border-t border-[#065EA6] mb-4" />
+            {/* INFO STACK (Monza Ares + date + emc) */}
+            <div className="flex md:flex-col gap-3 md:gap-4 mt-5 md:mt-0 pr-5" style={{ borderRight: '2px solid #065ea6' }}>
+              <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-left" style={{ aspectRatio: '1/1', background: '#065ea6', color: '#fff', padding: '8px', minHeight: '88px', width: '120px' }}>
+                <div style={{ fontWeight: 700, fontSize: '13px', lineHeight: 1.1, letterSpacing: '0.05em', width: '100%' }}>MONZA ARES<br />ACADEMY</div>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.45)', margin: '6px auto', width: '100%' }} />
+                <div style={{ fontWeight: 400, fontSize: '11px', letterSpacing: '0.06em' }}>SPITALUL MONZA</div>
+              </div>
+              <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-left" style={{ aspectRatio: '1/1', background: '#065ea6', color: '#fff', padding: '8px', minHeight: '88px', width: '120px' }}>
+                <div style={{ fontWeight: 800, fontSize: 'clamp(26px, 3vw, 36px)', lineHeight: 1 }}>{dayDisplay}</div>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.55)', width: '70%', margin: '6px auto' }} />
+                <div style={{ fontWeight: 500, fontSize: '11px', letterSpacing: '0.08em' }}>{monthDisplay}</div>
+              </div>
+              {emcPoints ? (
+                <div className="flex-1 md:flex-none flex flex-col items-center justify-center text-left" style={{ aspectRatio: '1/1', background: '#065ea6', color: '#fff', padding: '8px', minHeight: '88px', width: '120px' }}>
+                  <div style={{ fontWeight: 800, fontSize: 'clamp(26px, 3vw, 36px)', lineHeight: 1 }}>{emcPoints}</div>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.55)', width: '100%', margin: '5px auto' }} />
+                  <div style={{ fontWeight: 500, fontSize: '9px', letterSpacing: '0.06em', lineHeight: 1.25 }}>{creditsLabel}</div>
+                </div>
+              ) : null}
+            </div>
 
-          {/* Descriere */}
-          <p className="text-center mb-6" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: 'clamp(13px, 2.5vw, 24px)', color: '#065EA6', lineHeight: 1.5, textTransform: 'uppercase' }}>
-            {subtitle.split('\n').map((line, i, arr) => (
-              <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-            ))}
-          </p>
-
-          {/* DESKTOP: flex 4 in linie */}
-          <div className="hidden md:flex items-center gap-4">
-            <div className="flex-1 flex items-center justify-center text-left px-4" style={{ background: '#065EA6', height: '150px' }}>
-              <div>
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '22px', color: '#fff', lineHeight: 1, textTransform: 'uppercase', margin: 0 }}>{location}</p>
-                <div style={{ borderTop: '2px solid #ffffff', margin: '4px 0' }} />
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '16px', color: '#fff', textTransform: 'uppercase', margin: 0 }}>{venue}</p>
+            {/* IMAGES */}
+            <div className="flex gap-2 mt-4 md:mt-0 h-full">
+              <div className="flex-1 relative h-full" style={{ background: '#fff', overflow: 'hidden', minHeight: '180px' }}>
+                <Image
+                  src={imageUrl ?? '/device-tavi.png'}
+                  alt={event.title ?? ''}
+                  fill
+                  className="object-contain"
+                  quality={90}
+                  unoptimized={!!imageUrl}
+                />
               </div>
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center text-center px-4" style={{ background: '#ffffff', height: '150px' }}>
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '46px', color: '#065EA6', lineHeight: 1, margin: 0 }}>{day}</p>
-              <div style={{ borderTop: '2px solid #065EA6', width: '70%', margin: '4px 0' }} />
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '15px', color: '#065EA6', letterSpacing: '0.08em', margin: 0 }}>{month}</p>
-            </div>
-            <div className="flex-1 flex flex-col items-center justify-center text-center px-4" style={{ background: '#ffffff', height: '150px' }}>
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '46px', color: '#065EA6', lineHeight: 1, margin: 0 }}>{emcPoints}</p>
-              <div style={{ borderTop: '2px solid #065EA6', width: '100%', margin: '4px 0' }} />
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '15px', color: '#065EA6', lineHeight: 1, margin: 0, textAlign: 'left' }}>{creditsLabel}</p>
-            </div>
-            <div className="flex-[1.5] flex items-center justify-center px-4">
-              <Image src={imageUrl ?? '/device-tavi.png'} alt={event.title ?? 'Dispozitiv'} width={imageUrl ? 180 : 130} height={imageUrl ? 96 : 120} quality={90} className="object-cover" unoptimized={!!imageUrl} />
-            </div>
-          </div>
 
-          {/* MOBILE: grid 2x2 */}
-          <div className="grid grid-cols-2 gap-3 md:hidden">
-            <div className="flex items-center justify-start px-3" style={{ background: '#065EA6', height: '100px' }}>
-              <div>
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '13px', color: '#fff', lineHeight: 1.2, textTransform: 'uppercase', margin: 0 }}>{location}</p>
-                <div style={{ borderTop: '2px solid #ffffff', margin: '4px 0' }} />
-                <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 400, fontSize: '11px', color: '#fff', textTransform: 'uppercase', margin: 0 }}>{venue}</p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center justify-center text-center" style={{ background: '#ffffff', height: '100px' }}>
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '32px', color: '#065EA6', lineHeight: 1, margin: 0 }}>{day}</p>
-              <div style={{ borderTop: '2px solid #065EA6', width: '60%', margin: '4px 0' }} />
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '11px', color: '#065EA6', letterSpacing: '0.08em', margin: 0 }}>{month}</p>
-            </div>
-            <div className="flex flex-col items-center justify-center text-center px-2" style={{ background: '#ffffff', height: '100px' }}>
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 800, fontSize: '32px', color: '#065EA6', lineHeight: 1, margin: 0 }}>{emcPoints}</p>
-              <div style={{ borderTop: '2px solid #065EA6', width: '90%', margin: '4px 0' }} />
-              <p style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 500, fontSize: '11px', color: '#065EA6', lineHeight: 1.3, margin: 0, textAlign: 'center' }}>{creditsLabel}</p>
-            </div>
-            <div className="flex items-center justify-center" style={{ background: '#F7F7F7', height: '100px' }}>
-              <Image src={imageUrl ?? '/device-tavi.png'} alt={event.title ?? 'Dispozitiv'} width={100} height={90} quality={90} className="object-contain max-h-[85px] w-auto" unoptimized={!!imageUrl} />
-            </div>
           </div>
-
         </div>
       </section>
 
-      {/* Buton inscriere */}
-      <section className="bg-white pt-4">
-        <div className="flex justify-center">
-          <a href="#inscriere" className="inline-flex items-center gap-2 text-white rounded-full px-8 py-3 transition-all hover:-translate-y-px" style={{ background: '#065EA6', fontWeight: 300, fontSize: '13px' }}>
-            Înscrie-te aici
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4l5 5 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
-          </a>
-        </div>
-      </section>
+      {/* Buton inscriere / mesaj locuri epuizate */}
+      {!(event.show_fully_booked_message && event.fully_booked_message) && (
+        <section className="bg-white pt-4">
+          <div className="flex justify-center">
+            <a href="#inscriere" className="inline-flex items-center gap-2 text-white rounded-full px-8 py-3 transition-all hover:-translate-y-px" style={{ background: '#065EA6', fontWeight: 300, fontSize: '13px' }}>
+              Înscrie-te aici
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4l5 5 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            </a>
+          </div>
+        </section>
+      )}
 
       {/* Descriere */}
       {event.description && (
@@ -211,47 +241,92 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
       {event.speakers && event.speakers.length > 0 && (
         <section className="bg-white py-10">
           <div className="max-w-[1200px] mx-auto px-4 md:px-[120px] relative">
-            <button onClick={() => speakersRef.current?.scrollBy({ left: -(306 + 30), behavior: 'smooth' })} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center" style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}>
+            <button onClick={() => scrollToSpeaker(activeSpeakerIdx - 1)} disabled={activeSpeakerIdx === 0} aria-label="Anterior" className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center" style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: activeSpeakerIdx === 0 ? 'default' : 'pointer', opacity: activeSpeakerIdx === 0 ? 0.4 : 1 }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
-            <div ref={speakersRef} className="flex gap-[30px] overflow-x-auto" style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
+            <button onClick={() => scrollToSpeaker(activeSpeakerIdx - 1)} disabled={activeSpeakerIdx === 0} aria-label="Anterior" className="absolute left-2 top-[170px] z-10 flex md:hidden items-center justify-center" style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', cursor: activeSpeakerIdx === 0 ? 'default' : 'pointer', opacity: activeSpeakerIdx === 0 ? 0.4 : 1 }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 2L4 8L10 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <div ref={speakersRef} className="flex gap-[30px] overflow-x-auto speakers-track" style={{ scrollbarWidth: 'none', scrollSnapType: 'x mandatory' }}>
               {event.speakers.map(sp => <DoctorCard key={sp.id} speaker={sp} />)}
             </div>
-            <button onClick={() => speakersRef.current?.scrollBy({ left: 306 + 30, behavior: 'smooth' })} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center" style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}>
+            <button onClick={() => scrollToSpeaker(activeSpeakerIdx + 1)} disabled={activeSpeakerIdx === (event.speakers!.length - 1)} aria-label="Următor" className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center" style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: activeSpeakerIdx === (event.speakers!.length - 1) ? 'default' : 'pointer', opacity: activeSpeakerIdx === (event.speakers!.length - 1) ? 0.4 : 1 }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
+            <button onClick={() => scrollToSpeaker(activeSpeakerIdx + 1)} disabled={activeSpeakerIdx === (event.speakers!.length - 1)} aria-label="Următor" className="absolute right-2 top-[170px] z-10 flex md:hidden items-center justify-center" style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', cursor: activeSpeakerIdx === (event.speakers!.length - 1) ? 'default' : 'pointer', opacity: activeSpeakerIdx === (event.speakers!.length - 1) ? 0.4 : 1 }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2L12 8L6 14" stroke="#0066cc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
           </div>
-          <style>{`div::-webkit-scrollbar{display:none}`}</style>
+          {event.speakers.length > 1 && (
+            <div className="flex md:hidden justify-center items-center gap-2 mt-5">
+              {event.speakers.map((_, i) => (
+                <button key={i} onClick={() => scrollToSpeaker(i)} aria-label={`Vorbitor ${i + 1}`} style={{ width: i === activeSpeakerIdx ? '22px' : '8px', height: '8px', borderRadius: '4px', border: 'none', background: i === activeSpeakerIdx ? '#065EA6' : '#cbd5e1', padding: 0, cursor: 'pointer', transition: 'all 0.2s' }} />
+              ))}
+            </div>
+          )}
+          <style>{`
+            .speakers-track::-webkit-scrollbar{display:none}
+            .speaker-card{ width: 306px; }
+            @media (max-width: 767px){
+              .speakers-track{ padding-left: calc(50vw - 153px); padding-right: calc(50vw - 153px); }
+            }
+          `}</style>
         </section>
       )}
 
       {/* Program */}
-      {event.sessions && event.sessions.length > 0 && (
-        <section className="bg-white py-12">
-          <div className="max-w-[900px] mx-auto px-4">
-            <h2 className="text-center mb-2" style={{ fontWeight: 300, fontSize: '28px', color: '#000' }}>Program</h2>
-            <p className="text-center mb-8" style={{ fontWeight: 700, fontSize: '16px', color: '#065EA6', letterSpacing: '0.05em' }}>
-              {date.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
-            </p>
-            <div>
-              {event.sessions.map((s, i) => (
-                <div key={s.id} className="flex items-start gap-4 px-6 py-4" style={{ borderBottom: i < (event.sessions?.length || 0) - 1 ? '3px solid #065EA6' : 'none', background: '#fff' }}>
-                  <span style={{ fontWeight: 400, fontSize: '13px', color: '#065EA6', minWidth: '110px', flexShrink: 0 }}>{s.time_label}</span>
-                  <div>
-                    <p style={{ fontWeight: 400, fontSize: '13px', color: '#065EA6', margin: 0 }}>{s.title}</p>
-                    {s.items?.map(item => <p key={item.id} style={{ fontWeight: 300, fontSize: '13px', color: '#000', margin: '4px 0 0' }}>{item.content}</p>)}
+      {event.sessions && event.sessions.length > 0 && (() => {
+        const dayCount = isMultiDay ? Math.round((endDate!.getTime() - date.getTime()) / 86400000) + 1 : 1
+        const sessionsByDay: Record<number, typeof event.sessions> = {}
+        event.sessions.forEach(s => { const d = s.day_index || 0; (sessionsByDay[d] ||= []).push(s) })
+        const dayHeader = (di: number) => {
+          const d = new Date(date.getTime()); d.setDate(date.getDate() + di)
+          return d.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
+        }
+        return (
+          <section className="bg-white py-12">
+            <div className="max-w-[900px] mx-auto px-4">
+              <h2 className="text-center mb-8" style={{ fontWeight: 300, fontSize: '28px', color: '#000' }}>Program</h2>
+              {Array.from({ length: dayCount }, (_, di) => {
+                const sessions = sessionsByDay[di] || []
+                if (!sessions.length) return null
+                return (
+                  <div key={di} style={{ marginBottom: di < dayCount - 1 ? '2.5rem' : 0 }}>
+                    {dayCount > 1 && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', margin: '0 0 1.5rem' }}>
+                        <span style={{ fontWeight: 700, fontSize: '12px', color: '#fff', background: '#065EA6', padding: '0.25rem 0.75rem', borderRadius: '20px', letterSpacing: '0.08em' }}>ZIUA {di + 1}</span>
+                        <span style={{ fontWeight: 700, fontSize: '14px', color: '#065EA6', letterSpacing: '0.05em' }}>{dayHeader(di)}</span>
+                      </div>
+                    )}
+                    {dayCount === 1 && <p className="text-center mb-8" style={{ fontWeight: 700, fontSize: '16px', color: '#065EA6', letterSpacing: '0.05em' }}>{dayHeader(di)}</p>}
+                    <div>
+                      {sessions.map((s, i) => (
+                        <div key={s.id} className="flex items-start gap-4 px-6 py-4" style={{ borderBottom: i < sessions.length - 1 ? '3px solid #065EA6' : 'none', background: '#fff' }}>
+                          <span style={{ fontWeight: 400, fontSize: '13px', color: '#065EA6', minWidth: '110px', flexShrink: 0 }}>{s.time_label}</span>
+                          <div>
+                            <p style={{ fontWeight: 400, fontSize: '13px', color: '#065EA6', margin: 0 }}>{s.title}</p>
+                            {s.items?.map(item => <p key={item.id} style={{ fontWeight: 300, fontSize: '13px', color: '#000', margin: '4px 0 0' }}>{item.content}</p>)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )
+      })()}
 
-      {/* Form inscriere */}
+      {/* Form inscriere / mesaj locuri epuizate */}
       <section className="bg-white py-12" id="inscriere">
         <div className="max-w-[900px] mx-auto px-4">
           <div style={{ background: 'transparent', padding: '2.5rem 2rem', maxWidth: '700px', margin: '0 auto' }}>
+            {event.show_fully_booked_message && event.fully_booked_message ? (
+              <div style={{ background: '#fff8e1', border: '1px solid #f5d96b', borderRadius: '20px', padding: '2rem', textAlign: 'center', color: '#7a5d00', whiteSpace: 'pre-line', fontWeight: 400, fontSize: '1.05rem', lineHeight: 1.6 }}>
+                {event.fully_booked_message}
+              </div>
+            ) : (<>
             <h3 style={{ fontWeight: 700, fontSize: '1.5rem', color: '#000', marginBottom: '2rem', textAlign: 'center' }}>Înscrie-te</h3>
             {submitted ? (
               <div style={{ background: '#d4edda', color: '#155724', border: '1px solid #c3e6cb', borderRadius: '25px', padding: '2rem', textAlign: 'center', fontFamily: '"Roboto",sans-serif' }}>
@@ -313,6 +388,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                 </div>
               </form>
             )}
+            </>)}
           </div>
         </div>
       </section>

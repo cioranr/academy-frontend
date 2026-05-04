@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
-import { getEvent, getEventRegistrations, updateRegistrationStatus, deleteRegistration } from '@/lib/api'
+import { getEvent, getEventRegistrations, updateRegistrationStatus, deleteRegistration, generateDiploma, downloadDegree } from '@/lib/api'
 import type { BackendEvent, EventRegistration } from '@/types'
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -35,6 +35,18 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
     if (!confirm(`Ștergi definitiv înregistrarea lui ${reg.first_name} ${reg.last_name}? Această acțiune nu poate fi anulată.`)) return
     await deleteRegistration(reg.id)
     setRegistrations(prev => prev.filter(r => r.id !== reg.id))
+  }
+
+  const [diplomaBusy, setDiplomaBusy] = useState<number | null>(null)
+  const handleGenerateDiploma = async (reg: EventRegistration) => {
+    if (!reg.user_id) { alert('Înregistrarea nu este asociată unui cont de utilizator.'); return }
+    setDiplomaBusy(reg.id)
+    try {
+      const deg = await generateDiploma(reg.id)
+      await downloadDegree(deg.id, deg.file_name)
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Eroare la generarea diplomei')
+    } finally { setDiplomaBusy(null) }
   }
 
   const filtered = filter === 'all' ? registrations : registrations.filter(r => r.status === filter)
@@ -103,6 +115,9 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                     <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                       {reg.status !== 'approved' && <button onClick={() => handleStatus(reg, 'approved')} style={{ padding: '0.3rem 0.6rem', background: '#d1fae5', color: '#065f46', border: 'none', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Aprobă</button>}
                       {reg.status !== 'rejected' && <button onClick={() => handleStatus(reg, 'rejected')} style={{ padding: '0.3rem 0.6rem', background: '#fde8e8', color: '#991b1b', border: 'none', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Respinge</button>}
+                      <button onClick={() => handleGenerateDiploma(reg)} disabled={diplomaBusy === reg.id} style={{ padding: '0.3rem 0.6rem', background: '#ecffff', color: '#065EA6', border: '1px solid #065EA6', borderRadius: '6px', fontSize: '0.75rem', cursor: diplomaBusy === reg.id ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif', opacity: diplomaBusy === reg.id ? 0.6 : 1 }}>
+                        {diplomaBusy === reg.id ? 'Se generează...' : 'Diplomă'}
+                      </button>
                       <button onClick={() => handleDelete(reg)} style={{ padding: '0.3rem 0.6rem', background: '#1f2937', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Șterge</button>
                     </div>
                   </td>

@@ -14,6 +14,8 @@ export default function InregistrarePage() {
   const showCuim = ['medic-specialist', 'medic-primar'].includes(form.professional_grade) && form.specialty !== 'rezidenti'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm(p => ({ ...p, [k]: e.target.value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,8 +81,48 @@ export default function InregistrarePage() {
               {showCuim && (
                 <input placeholder="Cod Unic de Identificare Medic (CUIM) *" required style={{ ...inp, gridColumn: '1 / -1' }} value={form.cuim} onChange={set('cuim')} />
               )}
-              <input type="password" placeholder="Parolă *" required style={inp} value={form.password} onChange={set('password')} />
-              <input type="password" placeholder="Confirmă parola *" required style={inp} value={form.password_confirmation} onChange={set('password_confirmation')} />
+              <div style={{ position: 'relative' }}>
+                <input type={showPassword ? 'text' : 'password'} placeholder="Parolă *" required style={{ ...inp, paddingRight: '3rem' }} value={form.password} onChange={set('password')} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(s => !s)}
+                  aria-label={showPassword ? 'Ascunde parola' : 'Afișează parola'}
+                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', padding: '0.25rem', cursor: 'pointer', color: '#065EA6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input type={showPasswordConfirm ? 'text' : 'password'} placeholder="Confirmă parola *" required style={{ ...inp, paddingRight: '3rem' }} value={form.password_confirmation} onChange={set('password_confirmation')} />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordConfirm(s => !s)}
+                  aria-label={showPasswordConfirm ? 'Ascunde parola' : 'Afișează parola'}
+                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', padding: '0.25rem', cursor: 'pointer', color: '#065EA6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  {showPasswordConfirm ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <p style={{ fontWeight: 300, fontSize: '0.85rem', color: '#666', lineHeight: 1.5, margin: '1rem 0 1.5rem' }}>
