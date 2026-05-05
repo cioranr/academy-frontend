@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createEvent } from '@/lib/api'
+import { RichTextEditor } from '@/components/admin/RichTextEditor'
 
 export default function NewEventPage() {
   const router = useRouter()
@@ -34,7 +35,10 @@ export default function NewEventPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="col-span-2" style={{ gridColumn: '1/-1' }}><Label>Titlu *</Label><input required style={inp} placeholder="Titlul evenimentului" value={form.title} onChange={set('title')} /></div>
             <div style={{ gridColumn: '1/-1' }}><Label>Subtitlu</Label><input style={inp} placeholder="Subtitlu opțional" value={form.subtitle} onChange={set('subtitle')} /></div>
-            <div style={{ gridColumn: '1/-1' }}><Label>Descriere</Label><textarea style={{ ...inp, height: '120px', resize: 'vertical' }} placeholder="Descrierea evenimentului..." value={form.description} onChange={set('description')} /></div>
+            <div style={{ gridColumn: '1/-1' }}>
+              <Label>Descriere</Label>
+              <RichTextEditor value={form.description} onChange={html => setForm(p => ({ ...p, description: html }))} placeholder="Descrierea evenimentului..." />
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>
             <div><Label>Data start *</Label><input type="date" required style={inp} value={form.date} onChange={set('date')} /></div>

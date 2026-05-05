@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# TinyMCE assets (auto-copied from node_modules by scripts/copy-tinymce.mjs)
+/public/tinymce
+
 .idea/
 package-lock.json
 

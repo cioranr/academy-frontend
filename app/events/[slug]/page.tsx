@@ -232,8 +232,24 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
       {event.description && (
         <section className="bg-white py-16">
           <div className="max-w-[900px] mx-auto px-4">
-            <p style={{ fontWeight: 300, fontSize: '16px', color: '#000', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{event.description}</p>
+            <div className="event-description" style={{ fontWeight: 300, fontSize: '16px', color: '#000', lineHeight: 1.8 }} dangerouslySetInnerHTML={{ __html: event.description }} />
           </div>
+          <style>{`
+            .event-description p { margin: 0 0 1em 0; }
+            .event-description ul, .event-description ol { margin: 0 0 1em 1.5em; padding-left: 1.25em; }
+            .event-description ul { list-style: disc; }
+            .event-description ol { list-style: decimal; }
+            .event-description li { margin: 0.25em 0; }
+            .event-description h2 { font-size: 22px; font-weight: 500; margin: 1.5em 0 0.5em; color: #065ea6; }
+            .event-description h3 { font-size: 18px; font-weight: 500; margin: 1.25em 0 0.5em; color: #065ea6; }
+            .event-description a { color: #065ea6; text-decoration: underline; }
+            .event-description blockquote { margin: 1em 0; padding: 0.5em 1em; border-left: 3px solid #065ea6; background: #f0f7ff; color: #374151; }
+            .event-description strong { font-weight: 700; }
+            .event-description em { font-style: italic; }
+            .event-description img { max-width: 100%; height: auto; }
+            .event-description table { border-collapse: collapse; margin: 1em 0; }
+            .event-description table td, .event-description table th { border: 1px solid #e5e7eb; padding: 0.5em 0.75em; }
+          `}</style>
         </section>
       )}
 

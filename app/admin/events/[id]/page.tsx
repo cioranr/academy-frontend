@@ -3,6 +3,7 @@ import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { getEvent, updateEvent, uploadEventImage, createSpeaker, updateSpeaker, uploadSpeakerImage, deleteSpeaker, createSession, deleteSession, createSessionItem, deleteSessionItem, getDoctors, createDoctor, updateDoctor, uploadDoctorImage, uploadDoctorSignature } from '@/lib/api'
+import { RichTextEditor } from '@/components/admin/RichTextEditor'
 import { storageUrl } from '@/lib/api'
 import type { BackendEvent, EventSpeaker, EventSession, Doctor } from '@/types'
 
@@ -194,7 +195,10 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
                 <input style={inp} value={form.slug || ''} onChange={set('slug')} placeholder="ex: workshop-cardio-2026" />
               </div>
               <div style={{ gridColumn: '1/-1' }}><Label>Subtitlu <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(Enter = linie nouă)</span></Label><textarea style={{ ...inp, height: '72px', resize: 'vertical' }} value={form.subtitle || ''} onChange={set('subtitle')} /></div>
-              <div style={{ gridColumn: '1/-1' }}><Label>Descriere</Label><textarea style={{ ...inp, height: '100px', resize: 'vertical' }} value={form.description || ''} onChange={set('description')} /></div>
+              <div style={{ gridColumn: '1/-1' }}>
+                <Label>Descriere</Label>
+                <RichTextEditor value={form.description || ''} onChange={html => setForm(p => ({ ...p, description: html }))} placeholder="Descrierea evenimentului..." />
+              </div>
               <div><Label>Data start</Label><input type="date" style={inp} value={typeof form.date === 'string' ? form.date.split('T')[0] : ''} onChange={set('date')} /></div>
               <div><Label>Data sfârșit <span style={{ fontWeight: 300, textTransform: 'none', fontSize: '0.7rem', color: '#6D6E71' }}>(opțional)</span></Label><input type="date" style={inp} min={typeof form.date === 'string' ? form.date.split('T')[0] : undefined} value={typeof form.end_date === 'string' ? form.end_date.split('T')[0] : ''} onChange={set('end_date')} /></div>
               <div><Label>Status</Label><select style={{ ...inp, cursor: 'pointer' }} value={form.status || 'draft'} onChange={set('status')}><option value="draft">Ciornă</option><option value="published">Publicat</option><option value="cancelled">Anulat</option></select></div>
