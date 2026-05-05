@@ -1,4 +1,4 @@
-import type { BackendEvent, BackendUser, EventRegistration, Degree, EventSpeaker, EventSession, EventSessionItem, Doctor, BackendTestimonial } from '@/types'
+import type { BackendEvent, BackendUser, EventRegistration, Degree, EventSpeaker, EventSession, EventSessionItem, Doctor, BackendTestimonial, VideoResource } from '@/types'
 import type { Event, Workshop, Testimonial } from '@/types'
 import { MOCK_EVENTS, MOCK_FEATURED_WORKSHOP, MOCK_TESTIMONIAL } from './mock-data'
 
@@ -191,6 +191,28 @@ export async function downloadDegree(id: number, fileName: string): Promise<void
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a'); a.href = url; a.download = fileName; a.click()
   URL.revokeObjectURL(url)
+}
+
+// ── Video resources ────────────────────────────────────────────────────────
+export async function getVideoResources(): Promise<VideoResource[]> {
+  return apiJson('/video-resources')
+}
+export async function getVideoResourceBySlug(slug: string): Promise<VideoResource> {
+  return apiJson(`/video-resources/${slug}`)
+}
+export async function createVideoResource(data: Partial<VideoResource> & { doctor_ids?: number[] }): Promise<VideoResource> {
+  return apiJson('/video-resources', { method: 'POST', body: JSON.stringify(data) })
+}
+export async function updateVideoResource(id: number, data: Partial<VideoResource> & { doctor_ids?: number[] }): Promise<VideoResource> {
+  return apiJson(`/video-resources/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+export async function uploadVideoResourceVideo(id: number, file: File): Promise<string> {
+  const fd = new FormData(); fd.append('video', file)
+  const data = await apiJson<{ video_path: string }>(`/video-resources/${id}/video`, { method: 'POST', body: fd })
+  return data.video_path
+}
+export async function deleteVideoResource(id: number): Promise<void> {
+  await apiFetch(`/video-resources/${id}`, { method: 'DELETE' })
 }
 
 // ── Testimonials ────────────────────────────────────────────────────────────

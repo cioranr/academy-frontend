@@ -76,3 +76,17 @@ export interface Degree {
   file_path: string; file_name: string; uploaded_by: number
   created_at: string; event?: BackendEvent; uploader?: BackendUser
 }
+export interface VideoResource {
+  id: number
+  title: string
+  slug: string
+  short_description: string | null
+  content: string | null
+  video_path: string | null
+  video_embed: string | null
+  active: boolean
+  created_by: number | null
+  created_at: string
+  updated_at: string
+  doctors?: (Doctor & { pivot?: { order: number } })[]
+}
