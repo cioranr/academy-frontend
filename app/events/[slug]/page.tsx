@@ -135,7 +135,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
   const subtitle = event.subtitle ?? ''
   const location = event.location ?? ''
   const venue = event.venue ?? ''
-  const emcPoints = event.credits ?? 6
+  const emcPoints = event.credits ?? null
   const creditsLabel = event.credits_label ?? `CURS CREDITAT CU ${emcPoints} PUNCTE EMC`
   const imageUrl = storageUrl(event.image)
 
