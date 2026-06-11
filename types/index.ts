@@ -23,6 +23,33 @@ export interface HeroData {
 }
 
 // ── Backend API types ────────────────────────────────────────────────────────
+export interface QuestionnaireQuestion {
+  id: number
+  questionnaire_id: number
+  question: string
+  type: 'text' | 'radio' | 'checkbox' | 'rating'
+  options: string[] | null
+  required: boolean
+  order: number
+}
+
+export interface Questionnaire {
+  id: number
+  title: string
+  description: string | null
+  questions?: QuestionnaireQuestion[]
+  created_at: string
+  updated_at: string
+}
+
+export interface FeedbackResponse {
+  id: number
+  registration_id: number
+  questionnaire_id: number
+  answers: Record<string | number, string | string[]>
+  completed_at: string
+}
+
 export interface BackendEvent {
   id: number; title: string; subtitle: string | null; description: string | null
   slug: string; date: string; end_date: string | null; time_start: string | null; time_end: string | null
@@ -33,6 +60,7 @@ export interface BackendEvent {
   meta_title: string | null; meta_description: string | null; schema_org: string | null
   fully_booked_message: string | null; show_fully_booked_message: boolean
   cmr_address: string | null
+  send_feedback: boolean; questionnaire_id: number | null; questionnaire?: Questionnaire
   speakers?: EventSpeaker[]; sessions?: EventSession[]; directors?: EventSpeaker[]
 }
 export interface Doctor {
@@ -56,7 +84,11 @@ export interface EventRegistration {
   first_name: string; last_name: string; email: string
   phone: string | null; specialty: string | null; professional_grade: string | null
   cuim: string | null; message: string | null; status: 'pending' | 'approved' | 'rejected' | 'cancelled'
-  registered_at: string; event?: BackendEvent; user?: BackendUser
+  registered_at: string
+  is_present: boolean; present_at: string | null
+  feedback_sent_at: string | null; feedback_token: string | null
+  feedback_completed: boolean; diploma_sent: boolean
+  event?: BackendEvent; user?: BackendUser
 }
 export interface BackendUser {
   id: number; name: string; first_name: string | null; last_name: string | null

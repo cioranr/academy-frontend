@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
-import { getEvent, getEventRegistrations, updateRegistrationStatus, deleteRegistration, generateDiploma, downloadDegree } from '@/lib/api'
+import { getEvent, getEventRegistrations, updateRegistrationStatus, deleteRegistration, generateDiploma, downloadDegree, markPresent } from '@/lib/api'
 import type { BackendEvent, EventRegistration } from '@/types'
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -49,6 +49,19 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
     } finally { setDiplomaBusy(null) }
   }
 
+  const [presentBusy, setPresentBusy] = useState<number | null>(null)
+  const handleMarkPresent = async (reg: EventRegistration) => {
+    if (reg.is_present) return
+    if (!confirm('Ești sigur că vrei să confirmi prezența acestui participant?')) return
+    setPresentBusy(reg.id)
+    try {
+      const updated = await markPresent(reg.id)
+      setRegistrations(prev => prev.map(r => r.id === updated.id ? updated : r))
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Eroare la confirmarea prezenței')
+    } finally { setPresentBusy(null) }
+  }
+
   const filtered = filter === 'all' ? registrations : registrations.filter(r => r.status === filter)
   const counts = { all: registrations.length, pending: registrations.filter(r => r.status === 'pending').length, approved: registrations.filter(r => r.status === 'approved').length }
 
@@ -81,6 +94,10 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
               {label} ({counts[val as keyof typeof counts] ?? 0})
             </button>
           ))}
+          <Link href={`/admin/events/${id}/feedback`} style={{ padding: '0.4rem 0.9rem', borderRadius: '20px', border: '1px solid #065EA6', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', fontSize: '0.8rem', fontWeight: 400, background: '#ecffff', color: '#065EA6', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Feedback
+          </Link>
           <button onClick={exportCsv} disabled={filtered.length === 0} style={{ padding: '0.4rem 0.9rem', borderRadius: '20px', border: '1px solid #d1d5db', cursor: filtered.length === 0 ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif', fontSize: '0.8rem', fontWeight: 400, background: '#fff', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
@@ -113,6 +130,13 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                   <td style={{ padding: '0.85rem 1rem', fontSize: '0.8rem', color: '#6D6E71', whiteSpace: 'nowrap' }}>{new Date(reg.registered_at).toLocaleDateString('ro-RO')}</td>
                   <td style={{ padding: '0.85rem 1rem' }}>
                     <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => handleMarkPresent(reg)}
+                        disabled={reg.is_present || presentBusy === reg.id}
+                        title={reg.is_present ? `Prezent la ${reg.present_at ? new Date(reg.present_at).toLocaleDateString('ro-RO') : ''}` : 'Marchează prezent'}
+                        style={{ padding: '0.3rem 0.6rem', background: reg.is_present ? '#d1fae5' : '#fff7ed', color: reg.is_present ? '#065f46' : '#92400e', border: `1px solid ${reg.is_present ? '#6ee7b7' : '#fbbf24'}`, borderRadius: '6px', fontSize: '0.75rem', cursor: reg.is_present || presentBusy === reg.id ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif', opacity: presentBusy === reg.id ? 0.6 : 1, fontWeight: 500 }}>
+                        {reg.is_present ? '✓ Prezent' : presentBusy === reg.id ? '...' : 'Prezent'}
+                      </button>
                       {reg.status !== 'approved' && <button onClick={() => handleStatus(reg, 'approved')} style={{ padding: '0.3rem 0.6rem', background: '#d1fae5', color: '#065f46', border: 'none', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Aprobă</button>}
                       {reg.status !== 'rejected' && <button onClick={() => handleStatus(reg, 'rejected')} style={{ padding: '0.3rem 0.6rem', background: '#fde8e8', color: '#991b1b', border: 'none', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Respinge</button>}
                       <button onClick={() => handleGenerateDiploma(reg)} disabled={diplomaBusy === reg.id} style={{ padding: '0.3rem 0.6rem', background: '#ecffff', color: '#065EA6', border: '1px solid #065EA6', borderRadius: '6px', fontSize: '0.75rem', cursor: diplomaBusy === reg.id ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif', opacity: diplomaBusy === reg.id ? 0.6 : 1 }}>

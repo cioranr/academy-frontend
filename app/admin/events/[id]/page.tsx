@@ -2,10 +2,10 @@
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { getEvent, updateEvent, uploadEventImage, createSpeaker, updateSpeaker, uploadSpeakerImage, deleteSpeaker, createSession, deleteSession, createSessionItem, deleteSessionItem, getDoctors, createDoctor, updateDoctor, uploadDoctorImage, uploadDoctorSignature } from '@/lib/api'
+import { getEvent, updateEvent, uploadEventImage, createSpeaker, updateSpeaker, uploadSpeakerImage, deleteSpeaker, createSession, deleteSession, createSessionItem, deleteSessionItem, getDoctors, createDoctor, updateDoctor, uploadDoctorImage, uploadDoctorSignature, getQuestionnaires } from '@/lib/api'
 import { RichTextEditor } from '@/components/admin/RichTextEditor'
 import { storageUrl } from '@/lib/api'
-import type { BackendEvent, EventSpeaker, EventSession, Doctor } from '@/types'
+import type { BackendEvent, EventSpeaker, EventSession, Doctor, Questionnaire } from '@/types'
 
 const inp = { padding: '0.65rem 1rem', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '0.85rem', background: '#fff', fontFamily: '"Roboto",sans-serif', color: '#000', width: '100%', outline: 'none' }
 const Label = ({ children }: { children: React.ReactNode }) => <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#374151', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{children}</label>
@@ -23,7 +23,10 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   const [form, setForm] = useState<Partial<BackendEvent>>({})
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
-  const [tab, setTab] = useState<'info' | 'speakers' | 'schedule' | 'seo'>('info')
+  const [tab, setTab] = useState<'info' | 'speakers' | 'schedule' | 'seo' | 'feedback'>('info')
+  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([])
+  const [savingFeedback, setSavingFeedback] = useState(false)
+  const [feedbackForm, setFeedbackForm] = useState({ send_feedback: false, questionnaire_id: null as number | null })
   const [seoForm, setSeoForm] = useState({ meta_title: '', meta_description: '', schema_org: '' })
   const [savingSeo, setSavingSeo] = useState(false)
   const [doctors, setDoctors] = useState<Doctor[]>([])
@@ -43,12 +46,14 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm(p => ({ ...p, [k]: e.target.value }))
 
   useEffect(() => { getDoctors().then(setDoctors) }, [])
+  useEffect(() => { getQuestionnaires().then(setQuestionnaires) }, [])
 
   useEffect(() => {
     getEvent(id).then(ev => {
       setEvent(ev)
       setForm({ title: ev.title, slug: ev.slug || '', subtitle: ev.subtitle || '', description: ev.description || '', date: ev.date?.split('T')[0] || '', end_date: ev.end_date?.split('T')[0] || '', time_start: ev.time_start || '', time_end: ev.time_end || '', location: ev.location || '', venue: ev.venue || '', credits: ev.credits, credits_label: ev.credits_label || '', image: ev.image || '', image_small: ev.image_small || '', image_big: ev.image_big || '', status: ev.status, max_participants: ev.max_participants, fully_booked_message: ev.fully_booked_message || '', show_fully_booked_message: !!ev.show_fully_booked_message, cmr_address: ev.cmr_address || '' })
       setSeoForm({ meta_title: ev.meta_title || '', meta_description: ev.meta_description || '', schema_org: ev.schema_org || '' })
+      setFeedbackForm({ send_feedback: !!ev.send_feedback, questionnaire_id: ev.questionnaire_id ?? null })
     })
   }, [id])
 
@@ -60,6 +65,11 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   const handleSaveSeo = async () => {
     setSavingSeo(true)
     try { const ev = await updateEvent(Number(id), seoForm); setEvent(ev) } catch { alert('Eroare la salvare SEO') } finally { setSavingSeo(false) }
+  }
+
+  const handleSaveFeedback = async () => {
+    setSavingFeedback(true)
+    try { const ev = await updateEvent(Number(id), { send_feedback: feedbackForm.send_feedback, questionnaire_id: feedbackForm.send_feedback ? feedbackForm.questionnaire_id : null }); setEvent(ev); setFeedbackForm({ send_feedback: !!ev.send_feedback, questionnaire_id: ev.questionnaire_id ?? null }) } catch { alert('Eroare la salvare') } finally { setSavingFeedback(false) }
   }
 
   const [uploadingImageSmall, setUploadingImageSmall] = useState(false)
@@ -183,6 +193,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         {tabBtn('speakers', `Vorbitori (${event.speakers?.length || 0})`)}
         {tabBtn('schedule', `Program (${event.sessions?.length || 0})`)}
         {tabBtn('seo', 'SEO')}
+        {tabBtn('feedback', 'Feedback')}
       </div>
 
       {tab === 'info' && (
@@ -433,6 +444,55 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
             </div>
             <button onClick={handleSaveSeo} disabled={savingSeo} style={{ alignSelf: 'flex-start', padding: '0.65rem 2rem', background: '#065EA6', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.9rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', opacity: savingSeo ? 0.7 : 1 }}>
               {savingSeo ? 'Se salvează...' : 'Salvează SEO'}
+            </button>
+          </div>
+        </Section>
+      )}
+
+      {tab === 'feedback' && (
+        <Section title="Configurare Feedback">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div>
+              <Label>Trimite formular de feedback?</Label>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
+                {([['true', 'Da'], ['false', 'Nu']] as const).map(([val, label]) => (
+                  <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 1rem', border: `1px solid ${String(feedbackForm.send_feedback) === val ? '#065EA6' : '#e5e7eb'}`, borderRadius: '8px', background: String(feedbackForm.send_feedback) === val ? '#ecffff' : '#fff', fontSize: '0.85rem', color: String(feedbackForm.send_feedback) === val ? '#065EA6' : '#374151', fontWeight: String(feedbackForm.send_feedback) === val ? 500 : 400 }}>
+                    <input type="radio" name="send_feedback" value={val} checked={String(feedbackForm.send_feedback) === val} onChange={() => setFeedbackForm(p => ({ ...p, send_feedback: val === 'true' }))} style={{ display: 'none' }} />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {feedbackForm.send_feedback && (
+              <div>
+                <Label>Selectează chestionar</Label>
+                {questionnaires.length === 0 ? (
+                  <p style={{ color: '#6D6E71', fontWeight: 300, fontSize: '0.85rem', margin: '0.25rem 0 0' }}>
+                    Niciun chestionar creat. <a href="/admin/questionnaires/new" style={{ color: '#065EA6' }}>Creează unul</a>.
+                  </p>
+                ) : (
+                  <select style={{ ...inp, marginTop: '0.25rem' }} value={feedbackForm.questionnaire_id ?? ''} onChange={e => setFeedbackForm(p => ({ ...p, questionnaire_id: e.target.value ? Number(e.target.value) : null }))}>
+                    <option value="">— Alege chestionarul —</option>
+                    {questionnaires.map(q => <option key={q.id} value={q.id}>{q.title}</option>)}
+                  </select>
+                )}
+              </div>
+            )}
+
+            <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '1rem', fontSize: '0.85rem', color: '#6D6E71', fontWeight: 300 }}>
+              <strong style={{ fontWeight: 500, color: '#374151' }}>Cum funcționează:</strong>
+              <ol style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem', lineHeight: 1.7 }}>
+                <li>Managerul marchează participantul ca „Prezent" din lista de înscrieri.</li>
+                <li>Se trimite automat un email cu link către formularul de feedback.</li>
+                <li>Participantul completează chestionarul (o singură dată).</li>
+                <li>Diploma se generează automat și se trimite pe email.</li>
+                <li>Diploma apare și în secțiunea „Contul meu".</li>
+              </ol>
+            </div>
+
+            <button onClick={handleSaveFeedback} disabled={savingFeedback} style={{ alignSelf: 'flex-start', padding: '0.65rem 2rem', background: '#065EA6', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.9rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', opacity: savingFeedback ? 0.7 : 1 }}>
+              {savingFeedback ? 'Se salvează...' : 'Salvează configurarea Feedback'}
             </button>
           </div>
         </Section>

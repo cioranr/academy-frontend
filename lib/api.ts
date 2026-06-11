@@ -1,4 +1,4 @@
-import type { BackendEvent, BackendUser, EventRegistration, Degree, EventSpeaker, EventSession, EventSessionItem, Doctor, BackendTestimonial, VideoResource } from '@/types'
+import type { BackendEvent, BackendUser, EventRegistration, Degree, EventSpeaker, EventSession, EventSessionItem, Doctor, BackendTestimonial, VideoResource, Questionnaire } from '@/types'
 import type { Event, Workshop, Testimonial } from '@/types'
 import { MOCK_EVENTS, MOCK_FEATURED_WORKSHOP, MOCK_TESTIMONIAL } from './mock-data'
 
@@ -162,6 +162,76 @@ export async function deleteRegistration(id: number): Promise<void> {
 }
 export async function generateDiploma(registrationId: number): Promise<Degree> {
   return apiJson(`/registrations/${registrationId}/generate-diploma`, { method: 'POST' })
+}
+export async function markPresent(registrationId: number): Promise<EventRegistration> {
+  return apiJson(`/registrations/${registrationId}/mark-present`, { method: 'POST' })
+}
+
+// ── Questionnaires ─────────────────────────────────────────────────────────
+export async function getQuestionnaires(): Promise<Questionnaire[]> {
+  return apiJson('/questionnaires')
+}
+export async function getQuestionnaire(id: number): Promise<Questionnaire> {
+  return apiJson(`/questionnaires/${id}`)
+}
+export async function createQuestionnaire(data: { title: string; description?: string; questions?: object[] }): Promise<Questionnaire> {
+  return apiJson('/questionnaires', { method: 'POST', body: JSON.stringify(data) })
+}
+export async function updateQuestionnaire(id: number, data: { title?: string; description?: string; questions?: object[] }): Promise<Questionnaire> {
+  return apiJson(`/questionnaires/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+export async function deleteQuestionnaire(id: number): Promise<void> {
+  await apiFetch(`/questionnaires/${id}`, { method: 'DELETE' })
+}
+
+// ── Feedback ───────────────────────────────────────────────────────────────
+export interface FeedbackStats {
+  event: { id: number; title: string; send_feedback: boolean; questionnaire: Questionnaire | null }
+  total: number; present: number; feedback_sent: number; feedback_completed: number
+  feedback_pending: number; diploma_sent: number
+  participants: Array<{
+    id: number; first_name: string; last_name: string; email: string
+    is_present: boolean; present_at: string | null; feedback_sent_at: string | null
+    feedback_completed: boolean; diploma_sent: boolean
+  }>
+}
+export async function getEventFeedbackStats(eventId: number): Promise<FeedbackStats> {
+  return apiJson(`/events/${eventId}/feedback-stats`)
+}
+export async function exportEventFeedback(eventId: number): Promise<void> {
+  const res = await apiFetch(`/events/${eventId}/feedback-export`)
+  if (!res.ok) throw new Error('Export failed')
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = `feedback-${eventId}.csv`; a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ── Public feedback form ───────────────────────────────────────────────────
+export interface PublicFeedbackForm {
+  registration: { first_name: string; last_name: string }
+  event: { title: string; date: string; location: string | null }
+  questionnaire: Questionnaire
+}
+export async function getFeedbackForm(token: string): Promise<PublicFeedbackForm> {
+  const res = await fetch(`${API_BASE}/feedback/${token}`, { headers: { Accept: 'application/json' } })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: 'Eroare' }))
+    throw new Error(err.message || `HTTP ${res.status}`)
+  }
+  return res.json()
+}
+export async function submitFeedbackForm(token: string, answers: Record<string | number, string | string[]>): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/feedback/${token}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ answers }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: 'Eroare' }))
+    throw new Error(err.message || `HTTP ${res.status}`)
+  }
+  return res.json()
 }
 
 // ── Users (admin) ──────────────────────────────────────────────────────────
