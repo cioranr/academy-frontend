@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const event = await fetch(`${API_BASE}/events/${slug}`, { cache: 'no-store' }).then(r => r.json())
     const title       = event.meta_title       || event.title
     const description = event.meta_description || event.description?.substring(0, 160) || undefined
-    const ogImage     = absoluteImage(event.image_big || event.image)
-    const images      = ogImage ? [{ url: ogImage, alt: event.title }] : undefined
+    const ogImage     = absoluteImage(event.image_big || event.image) || '/monza-ares-academy-og.png'
+    const images      = [{ url: ogImage, alt: event.title }]
     return {
       title:       event.meta_title ? { absolute: title } : title,
       description,
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         card:        'summary_large_image',
         title,
         description,
-        images: ogImage ? [ogImage] : undefined,
+        images: [ogImage],
       },
     }
   } catch {
