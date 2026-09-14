@@ -28,7 +28,13 @@ async function apiFetch(endpoint: string, options: RequestInit = {}): Promise<Re
   if (!isFormData) headers['Content-Type'] = 'application/json'
   if (token) headers['Authorization'] = `Bearer ${token}`
   const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers })
-  if (res.status === 401) { removeToken(); window.location.href = '/login' }
+  if (res.status === 401) {
+    removeToken()
+    // Preserve the current page so login can send the user back (e.g. QR check-in flow)
+    const here = window.location.pathname + window.location.search
+    const redirect = here.startsWith('/login') || here === '/' ? '' : `?redirect=${encodeURIComponent(here)}`
+    window.location.href = `/login${redirect}`
+  }
   return res
 }
 
@@ -165,6 +171,39 @@ export async function generateDiploma(registrationId: number): Promise<Degree> {
 }
 export async function markPresent(registrationId: number): Promise<EventRegistration> {
   return apiJson(`/registrations/${registrationId}/mark-present`, { method: 'POST' })
+}
+export async function updatePresence(registrationId: number, isPresent: boolean): Promise<EventRegistration> {
+  return apiJson(`/registrations/${registrationId}/presence`, { method: 'PATCH', body: JSON.stringify({ is_present: isPresent }) })
+}
+
+// ── QR check-in ────────────────────────────────────────────────────────────
+export interface CheckinQr { token: string | null; url: string | null; generated_at: string | null }
+export async function getCheckinQr(eventId: number): Promise<CheckinQr> {
+  return apiJson(`/events/${eventId}/checkin-qr`)
+}
+export async function generateCheckinQr(eventId: number): Promise<CheckinQr> {
+  return apiJson(`/events/${eventId}/checkin-qr`, { method: 'POST' })
+}
+export interface CheckinEvent { id: number; slug: string; title: string; date: string; end_date: string | null; time_start: string | null; time_end: string | null; location: string | null; venue: string | null }
+export interface CheckinResult {
+  status: 'confirmed' | 'already_confirmed'
+  message: string
+  participant: { first_name: string; last_name: string }
+  present_at: string | null
+  event: CheckinEvent
+}
+export class CheckinError extends Error {
+  constructor(public code: 'event_inactive' | 'not_registered' | 'unknown', message: string, public event?: CheckinEvent) { super(message) }
+}
+/** Throws CheckinError with a machine-readable `code` on business errors. */
+export async function checkin(token: string): Promise<CheckinResult> {
+  const res = await apiFetch(`/checkin/${encodeURIComponent(token)}`, { method: 'POST' })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const code = body.code === 'event_inactive' || body.code === 'not_registered' ? body.code : 'unknown'
+    throw new CheckinError(code, body.message || `HTTP ${res.status}`, body.event)
+  }
+  return body as CheckinResult
 }
 
 // ── Questionnaires ─────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
-import { getEvent, getEventRegistrations, updateRegistrationStatus, deleteRegistration, generateDiploma, downloadDegree, markPresent } from '@/lib/api'
+import { getEvent, getEventRegistrations, updateRegistrationStatus, deleteRegistration, generateDiploma, downloadDegree, updatePresence } from '@/lib/api'
 import type { BackendEvent, EventRegistration } from '@/types'
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -11,6 +11,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   cancelled: { bg: '#f3f4f6', text: '#6b7280' },
 }
 const STATUS_RO: Record<string, string> = { pending: 'În așteptare', approved: 'Aprobat', rejected: 'Respins', cancelled: 'Anulat' }
+const PRESENCE_METHOD_RO: Record<string, string> = { qr: 'QR code', manual: 'Manual' }
 
 export default function EventRegistrationsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -50,26 +51,32 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
   }
 
   const [presentBusy, setPresentBusy] = useState<number | null>(null)
-  const handleMarkPresent = async (reg: EventRegistration) => {
-    if (reg.is_present) return
-    if (!confirm('Ești sigur că vrei să confirmi prezența acestui participant?')) return
+  const handleTogglePresence = async (reg: EventRegistration) => {
+    const next = !reg.is_present
+    const q = next
+      ? 'Confirmi manual prezența acestui participant?'
+      : `Anulezi prezența pentru ${reg.first_name} ${reg.last_name}? (confirmată ${PRESENCE_METHOD_RO[reg.presence_method || 'manual']?.toLowerCase()})`
+    if (!confirm(q)) return
     setPresentBusy(reg.id)
     try {
-      const updated = await markPresent(reg.id)
+      const updated = await updatePresence(reg.id, next)
       setRegistrations(prev => prev.map(r => r.id === updated.id ? updated : r))
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Eroare la confirmarea prezenței')
+      alert(e instanceof Error ? e.message : 'Eroare la actualizarea prezenței')
     } finally { setPresentBusy(null) }
   }
 
-  const filtered = filter === 'all' ? registrations : registrations.filter(r => r.status === filter)
-  const counts = { all: registrations.length, pending: registrations.filter(r => r.status === 'pending').length, approved: registrations.filter(r => r.status === 'approved').length }
+  const filtered = filter === 'all' ? registrations : filter === 'present' ? registrations.filter(r => r.is_present) : registrations.filter(r => r.status === filter)
+  const counts = { all: registrations.length, pending: registrations.filter(r => r.status === 'pending').length, approved: registrations.filter(r => r.status === 'approved').length, present: registrations.filter(r => r.is_present).length }
 
   const exportCsv = () => {
-    const headers = ['Nume', 'Prenume', 'Email', 'Telefon', 'Specialitate', 'Grad profesional', 'CUIM', 'Status', 'Mesaj', 'Data înscrierii']
+    const headers = ['Nume', 'Prenume', 'Email', 'Telefon', 'Specialitate', 'Grad profesional', 'CUIM', 'Status', 'Prezent', 'Metodă confirmare', 'Data prezenței', 'Mesaj', 'Data înscrierii']
     const rows = filtered.map(r => [
       r.last_name, r.first_name, r.email, r.phone || '', r.specialty || '',
       r.professional_grade || '', r.cuim || '', STATUS_RO[r.status],
+      r.is_present ? 'Da' : 'Nu',
+      r.is_present ? (PRESENCE_METHOD_RO[r.presence_method || 'manual'] || '') : '',
+      r.present_at ? new Date(r.present_at).toLocaleString('ro-RO') : '',
       (r.message || '').replace(/"/g, '""'),
       new Date(r.registered_at).toLocaleDateString('ro-RO'),
     ])
@@ -89,7 +96,7 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
         <Link href="/admin/events" style={{ color: '#6D6E71', textDecoration: 'none', fontSize: '0.9rem' }}>← Înapoi</Link>
         <h1 style={{ fontWeight: 300, fontSize: '1.5rem', color: '#000', margin: 0, flex: 1 }}>Înscrieri: {event?.title || '...'}</h1>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          {[['all', 'Toate'], ['pending', 'În așteptare'], ['approved', 'Aprobate']].map(([val, label]) => (
+          {[['all', 'Toate'], ['pending', 'În așteptare'], ['approved', 'Aprobate'], ['present', 'Prezenți']].map(([val, label]) => (
             <button key={val} onClick={() => setFilter(val)} style={{ padding: '0.4rem 0.9rem', borderRadius: '20px', border: 'none', cursor: 'pointer', fontFamily: '"Roboto",sans-serif', fontSize: '0.8rem', fontWeight: filter === val ? 500 : 400, background: filter === val ? '#065EA6' : '#f3f4f6', color: filter === val ? '#fff' : '#374151' }}>
               {label} ({counts[val as keyof typeof counts] ?? 0})
             </button>
@@ -110,7 +117,7 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['Nume', 'Email', 'Telefon', 'Specialitate', 'Grad', 'CUIM', 'Status', 'Data', 'Acțiuni'].map(h => (
+                {['Nume', 'Email', 'Telefon', 'Specialitate', 'Grad', 'CUIM', 'Status', 'Prezență', 'Data', 'Acțiuni'].map(h => (
                   <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6D6E71', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -127,15 +134,28 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                   <td style={{ padding: '0.85rem 1rem' }}>
                     <span style={{ ...STATUS_COLORS[reg.status], borderRadius: '20px', padding: '0.2rem 0.6rem', fontSize: '0.75rem', fontWeight: 500 }}>{STATUS_RO[reg.status]}</span>
                   </td>
+                  <td style={{ padding: '0.85rem 1rem', whiteSpace: 'nowrap' }}>
+                    {reg.is_present ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#d1fae5', color: '#065f46', borderRadius: '20px', padding: '0.2rem 0.6rem', fontSize: '0.75rem', fontWeight: 500, width: 'fit-content' }}>
+                          {reg.presence_method === 'qr'
+                            ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 18v3"/></svg>
+                            : <span>✓</span>}
+                          {PRESENCE_METHOD_RO[reg.presence_method || 'manual']}
+                        </span>
+                        {reg.present_at && <span style={{ fontSize: '0.7rem', color: '#6D6E71' }}>{new Date(reg.present_at).toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>}
+                      </div>
+                    ) : <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>—</span>}
+                  </td>
                   <td style={{ padding: '0.85rem 1rem', fontSize: '0.8rem', color: '#6D6E71', whiteSpace: 'nowrap' }}>{new Date(reg.registered_at).toLocaleDateString('ro-RO')}</td>
                   <td style={{ padding: '0.85rem 1rem' }}>
                     <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
                       <button
-                        onClick={() => handleMarkPresent(reg)}
-                        disabled={reg.is_present || presentBusy === reg.id}
-                        title={reg.is_present ? `Prezent la ${reg.present_at ? new Date(reg.present_at).toLocaleDateString('ro-RO') : ''}` : 'Marchează prezent'}
-                        style={{ padding: '0.3rem 0.6rem', background: reg.is_present ? '#d1fae5' : '#fff7ed', color: reg.is_present ? '#065f46' : '#92400e', border: `1px solid ${reg.is_present ? '#6ee7b7' : '#fbbf24'}`, borderRadius: '6px', fontSize: '0.75rem', cursor: reg.is_present || presentBusy === reg.id ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif', opacity: presentBusy === reg.id ? 0.6 : 1, fontWeight: 500 }}>
-                        {reg.is_present ? '✓ Prezent' : presentBusy === reg.id ? '...' : 'Prezent'}
+                        onClick={() => handleTogglePresence(reg)}
+                        disabled={presentBusy === reg.id}
+                        title={reg.is_present ? 'Anulează confirmarea prezenței' : 'Confirmă prezența manual'}
+                        style={{ padding: '0.3rem 0.6rem', background: reg.is_present ? '#fff' : '#fff7ed', color: reg.is_present ? '#6b7280' : '#92400e', border: `1px solid ${reg.is_present ? '#d1d5db' : '#fbbf24'}`, borderRadius: '6px', fontSize: '0.75rem', cursor: presentBusy === reg.id ? 'default' : 'pointer', fontFamily: '"Roboto",sans-serif', opacity: presentBusy === reg.id ? 0.6 : 1, fontWeight: 500 }}>
+                        {presentBusy === reg.id ? '...' : reg.is_present ? 'Anulează prezența' : 'Prezent'}
                       </button>
                       {reg.status !== 'approved' && <button onClick={() => handleStatus(reg, 'approved')} style={{ padding: '0.3rem 0.6rem', background: '#d1fae5', color: '#065f46', border: 'none', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Aprobă</button>}
                       {reg.status !== 'rejected' && <button onClick={() => handleStatus(reg, 'rejected')} style={{ padding: '0.3rem 0.6rem', background: '#fde8e8', color: '#991b1b', border: 'none', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', fontFamily: '"Roboto",sans-serif' }}>Respinge</button>}
@@ -147,7 +167,7 @@ export default function EventRegistrationsPage({ params }: { params: Promise<{ i
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={9} style={{ padding: '3rem', textAlign: 'center', color: '#6D6E71', fontWeight: 300 }}>Nicio înscriere.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={10} style={{ padding: '3rem', textAlign: 'center', color: '#6D6E71', fontWeight: 300 }}>Nicio înscriere.</td></tr>}
             </tbody>
           </table>
         </div>

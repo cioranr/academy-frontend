@@ -86,6 +86,7 @@ export interface EventRegistration {
   cuim: string | null; message: string | null; status: 'pending' | 'approved' | 'rejected' | 'cancelled'
   registered_at: string
   is_present: boolean; present_at: string | null
+  presence_method: 'manual' | 'qr' | null; presence_confirmed_by: number | null
   feedback_sent_at: string | null; feedback_token: string | null
   feedback_completed: boolean; diploma_sent: boolean
   event?: BackendEvent; user?: BackendUser

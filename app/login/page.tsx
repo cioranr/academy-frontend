@@ -1,12 +1,24 @@
 'use client'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 
+/** Only allow same-origin relative paths as post-login destinations. */
+function safeRedirect(raw: string | null): string {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/dashboard'
+  return raw
+}
+
 export default function LoginPage() {
+  return <Suspense fallback={null}><LoginForm /></Suspense>
+}
+
+function LoginForm() {
   const { login } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = safeRedirect(searchParams.get('redirect'))
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,7 +28,7 @@ export default function LoginPage() {
     e.preventDefault(); setError(''); setLoading(true)
     try {
       await login(form.email, form.password)
-      router.push('/dashboard')
+      router.replace(redirectTo)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Eroare la autentificare')
     } finally { setLoading(false) }
@@ -64,7 +76,7 @@ export default function LoginPage() {
         </form>
         <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.9rem', color: '#6D6E71', fontWeight: 300 }}>
           Nu ai cont?{' '}
-          <Link href="/inregistrare" style={{ color: '#065EA6', textDecoration: 'none', fontWeight: 400 }}>Înregistrează-te</Link>
+          <Link href={redirectTo !== '/dashboard' ? `/inregistrare?redirect=${encodeURIComponent(redirectTo)}` : '/inregistrare'} style={{ color: '#065EA6', textDecoration: 'none', fontWeight: 400 }}>Înregistrează-te</Link>
         </p>
       </div>
     </main>

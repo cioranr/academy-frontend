@@ -1,14 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { useRecaptcha } from '@/lib/useRecaptcha'
 
 export default function InregistrarePage() {
+  return <Suspense fallback={null}><InregistrareForm /></Suspense>
+}
+
+function InregistrareForm() {
   const { register } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const rawRedirect = searchParams.get('redirect')
+  const redirectTo = rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard'
   const { getToken } = useRecaptcha()
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', password_confirmation: '', phone: '', specialty: '', professional_grade: '', cuim: '' })
   const showCuim = ['medic-specialist', 'medic-primar'].includes(form.professional_grade) && form.specialty !== 'rezidenti'
@@ -26,7 +33,7 @@ export default function InregistrarePage() {
       const payload = { ...form, name: `${form.first_name} ${form.last_name}`, recaptcha_token, website: '' }
       if (!showCuim) payload.cuim = ''
       await register(payload)
-      router.push('/dashboard')
+      router.replace(redirectTo)
     } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Eroare la înregistrare') } finally { setLoading(false) }
   }
 

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { getEvent, updateEvent, uploadEventImage, createSpeaker, updateSpeaker, uploadSpeakerImage, deleteSpeaker, createSession, deleteSession, createSessionItem, deleteSessionItem, getDoctors, createDoctor, updateDoctor, uploadDoctorImage, uploadDoctorSignature, getQuestionnaires } from '@/lib/api'
 import { RichTextEditor } from '@/components/admin/RichTextEditor'
+import { EventQrTab } from '@/components/admin/EventQrTab'
 import { storageUrl } from '@/lib/api'
 import type { BackendEvent, EventSpeaker, EventSession, Doctor, Questionnaire } from '@/types'
 
@@ -23,7 +24,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   const [form, setForm] = useState<Partial<BackendEvent>>({})
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
-  const [tab, setTab] = useState<'info' | 'speakers' | 'schedule' | 'seo' | 'feedback'>('info')
+  const [tab, setTab] = useState<'info' | 'speakers' | 'schedule' | 'seo' | 'feedback' | 'qr'>('info')
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([])
   const [savingFeedback, setSavingFeedback] = useState(false)
   const [feedbackForm, setFeedbackForm] = useState({ send_feedback: false, questionnaire_id: null as number | null })
@@ -194,6 +195,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         {tabBtn('schedule', `Program (${event.sessions?.length || 0})`)}
         {tabBtn('seo', 'SEO')}
         {tabBtn('feedback', 'Feedback')}
+        {tabBtn('qr', 'Cod QR')}
       </div>
 
       {tab === 'info' && (
@@ -495,6 +497,12 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
               {savingFeedback ? 'Se salvează...' : 'Salvează configurarea Feedback'}
             </button>
           </div>
+        </Section>
+      )}
+
+      {tab === 'qr' && (
+        <Section title="Check-in prin cod QR">
+          <EventQrTab eventId={event.id} eventSlug={event.slug} />
         </Section>
       )}
 
