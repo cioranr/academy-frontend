@@ -5,12 +5,14 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { useRecaptcha } from '@/lib/useRecaptcha'
+import { useSpecialties } from '@/lib/useSpecialties'
 
 export default function InregistrarePage() {
   return <Suspense fallback={null}><InregistrareForm /></Suspense>
 }
 
 function InregistrareForm() {
+  const specialties = useSpecialties()
   const { register } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -80,10 +82,7 @@ function InregistrareForm() {
               </select>
               <select style={sel} value={form.specialty} onChange={set('specialty')}>
                 <option value="">Specialitate</option>
-                <option value="cardiologie">Cardiologie</option>
-                <option value="chirurgie">Chirurgie cardiovasculară</option>
-                <option value="rezidenti">Rezidenți</option>
-                <option value="alta">Altă specialitate</option>
+                {specialties.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
               {showCuim && (
                 <input placeholder="Cod Unic de Identificare Medic (CUIM) *" required style={{ ...inp, gridColumn: '1 / -1' }} value={form.cuim} onChange={set('cuim')} />

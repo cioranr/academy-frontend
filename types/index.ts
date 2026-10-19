@@ -104,6 +104,9 @@ export interface BackendTestimonial {
   youtube_url: string | null
   active: boolean; order: number; created_at: string; updated_at: string
 }
+export interface Specialty {
+  id: number; value: string; label: string; order: number; created_at: string; updated_at: string
+}
 export interface Degree {
   id: number; user_id: number; event_id: number | null; title: string
   file_path: string; file_name: string; uploaded_by: number

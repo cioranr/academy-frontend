@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { getMyRegistrations, getUserDegrees, downloadDegree, updateProfile } from '@/lib/api'
 import type { EventRegistration, Degree } from '@/types'
 import { googleCalendarUrl, outlookCalendarUrl, icsUrl } from '@/lib/calendar'
+import { useSpecialties } from '@/lib/useSpecialties'
 
 const ROLE_LABELS: Record<string, string> = { participant: 'Participant', doctor: 'Medic', admin: 'Administrator', events_manager: 'Manager Evenimente' }
 const STATUS_COLORS: Record<string, string> = { pending: '#f59e0b', approved: '#10b981', rejected: '#ef4444', cancelled: '#6b7280' }
@@ -13,6 +14,7 @@ const STATUS_LABELS: Record<string, string> = { pending: 'În așteptare', appro
 const inp = { width: '100%', padding: '0.65rem 1rem', border: '1px solid #e5e7eb', borderRadius: '10px', fontSize: '0.9rem', background: '#fff', fontFamily: '"Roboto",sans-serif', color: '#000', outline: 'none' }
 
 export default function DashboardPage() {
+  const specialties = useSpecialties()
   const { user } = useAuth()
   const [registrations, setRegistrations] = useState<EventRegistration[]>([])
   const [degrees, setDegrees] = useState<Degree[]>([])
@@ -135,10 +137,7 @@ export default function DashboardPage() {
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: '#374151', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Specialitate</label>
                 <select style={{ ...inp, cursor: 'pointer' }} value={profileForm.specialty} onChange={e => setProfileForm(p => ({ ...p, specialty: e.target.value }))}>
                   <option value="">—</option>
-                  <option value="cardiologie">Cardiologie</option>
-                  <option value="chirurgie">Chirurgie cardiovasculară</option>
-                  <option value="rezidenti">Rezidenți</option>
-                  <option value="alta">Altă specialitate</option>
+                  {specialties.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </div>
               {profileError && <p style={{ color: '#ef4444', fontSize: '0.85rem', margin: 0 }}>{profileError}</p>}

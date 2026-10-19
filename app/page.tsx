@@ -26,16 +26,26 @@ async function fetchTestimonials(): Promise<BackendTestimonial[]> {
   } catch { return [] }
 }
 
+// An event is over once its last day (end_date, or date for one-day events) has passed.
+function isPast(ev: BackendEvent, today: string): boolean {
+  return (ev.end_date ?? ev.date).substring(0, 10) < today
+}
+
 export default async function HomePage() {
   const [events, testimonials] = await Promise.all([fetchEvents(), fetchTestimonials()])
   const featured = events[0] ?? null
+
+  const today    = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Bucharest' })
+  const upcoming = events.filter(ev => !isPast(ev, today)).sort((a, b) => a.date.localeCompare(b.date))
+  const past     = events.filter(ev => isPast(ev, today))
 
   return (
     <>
       <Hero />
       <FeaturedWorkshop event={featured} />
       <About />
-      <EventsCarousel events={events} />
+      {upcoming.length > 0 && <EventsCarousel events={upcoming} title="Următoarele evenimente" />}
+      {past.length > 0 && <EventsCarousel events={past} title="Evenimente anterioare" />}
       <Testimonial data={testimonials} />
     </>
   )

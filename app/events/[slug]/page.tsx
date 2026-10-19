@@ -6,6 +6,7 @@ import { getEvent, registerForEvent, storageUrl } from '@/lib/api'
 import type { BackendEvent, EventSpeaker } from '@/types'
 import { useAuth } from '@/lib/auth'
 import { useRecaptcha } from '@/lib/useRecaptcha'
+import { useSpecialties } from '@/lib/useSpecialties'
 
 function DoctorCard({ speaker }: { speaker: EventSpeaker }) {
   return (
@@ -27,6 +28,7 @@ function DoctorCard({ speaker }: { speaker: EventSpeaker }) {
 }
 
 export default function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const specialties = useSpecialties()
   const { slug } = use(params)
   const { user } = useAuth()
   const { getToken } = useRecaptcha()
@@ -379,10 +381,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ slug: st
                   </select>
                   <select style={sel} value={form.specialty} onChange={e => setForm(p => ({ ...p, specialty: e.target.value }))}>
                     <option value="" disabled>Specialitate</option>
-                    <option value="cardiologie">Cardiologie</option>
-                    <option value="chirurgie">Chirurgie cardiovasculară</option>
-                    <option value="rezidenti">Rezidenți</option>
-                    <option value="alta">Altă specialitate</option>
+                    {specialties.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                   {showCuim && (
                     <input style={{ ...inp, gridColumn: '1 / -1' }} placeholder="Cod Unic de Identificare Medic (CUIM) *" required value={form.cuim} onChange={e => setForm(p => ({ ...p, cuim: e.target.value }))} />

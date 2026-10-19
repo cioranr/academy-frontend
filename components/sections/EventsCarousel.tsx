@@ -14,6 +14,7 @@ const FALLBACK_ITEMS = [
 
 interface EventsCarouselProps {
   events?: BackendEvent[]
+  title?: string
 }
 
 function ArrowIcon() {
@@ -24,7 +25,7 @@ function ArrowIcon() {
   )
 }
 
-export function EventsCarousel({ events }: EventsCarouselProps) {
+export function EventsCarousel({ events, title = 'Vezi următoarele conferințe și workshopuri programate' }: EventsCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const SLIDE_WIDTH_DESKTOP = 338 + 30
   const SLIDE_WIDTH_MOBILE  = 280 + 16
@@ -49,7 +50,7 @@ export function EventsCarousel({ events }: EventsCarouselProps) {
       <div className="max-w-[1200px] mx-auto px-4 md:px-[120px] relative">
 
         <h2 className="text-center pb-5" style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: 'clamp(28px, 4vw, 28px)', color: '#000', marginBottom: '24px' }}>
-          Vezi următoarele conferințe și workshopuri programate
+          {title}
         </h2>
 
         {/* Prev — desktop */}
@@ -77,9 +78,9 @@ export function EventsCarousel({ events }: EventsCarouselProps) {
 style={{ width: 'clamp(260px, 75vw, 338px)', height: 'clamp(360px, 80vw, 462px)', scrollSnapAlign: 'start' }}
             >
               <div className="flex flex-col h-full" style={{ background: '#f5f5f5' }}>
-                <div className="relative overflow-hidden" style={{ flex: '0 0 73%' }}>
+                <Link href={item.href} aria-label={item.title} className="relative overflow-hidden block" style={{ flex: '0 0 73%' }}>
                   <Image src={item.image} alt={item.title} fill quality={75} className="object-cover object-top" sizes="338px" unoptimized={item.image.startsWith('http')} />
-                </div>
+                </Link>
                 <div className="p-4" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <h2 style={{ fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: 'clamp(14px, 3.5vw, 18px)', color: '#000', margin: '0 0 4px', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>

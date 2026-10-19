@@ -1,4 +1,4 @@
-import type { BackendEvent, BackendUser, EventRegistration, Degree, EventSpeaker, EventSession, EventSessionItem, Doctor, BackendTestimonial, VideoResource, Questionnaire } from '@/types'
+import type { BackendEvent, BackendUser, EventRegistration, Degree, EventSpeaker, EventSession, EventSessionItem, Doctor, BackendTestimonial, VideoResource, Questionnaire, Specialty } from '@/types'
 import type { Event, Workshop, Testimonial } from '@/types'
 import { MOCK_EVENTS, MOCK_FEATURED_WORKSHOP, MOCK_TESTIMONIAL } from './mock-data'
 
@@ -322,6 +322,18 @@ export async function uploadVideoResourceVideo(id: number, file: File): Promise<
 }
 export async function deleteVideoResource(id: number): Promise<void> {
   await apiFetch(`/video-resources/${id}`, { method: 'DELETE' })
+}
+
+// ── Specialties ──────────────────────────────────────────────────────────────
+export async function getSpecialties(): Promise<Specialty[]> { return apiJson('/specialties') }
+export async function createSpecialty(data: { label: string; value?: string; order?: number }): Promise<Specialty> {
+  return apiJson('/specialties', { method: 'POST', body: JSON.stringify(data) })
+}
+export async function updateSpecialty(id: number, data: { label?: string; order?: number }): Promise<Specialty> {
+  return apiJson(`/specialties/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+export async function deleteSpecialty(id: number): Promise<void> {
+  await apiJson(`/specialties/${id}`, { method: 'DELETE' })
 }
 
 // ── Testimonials ────────────────────────────────────────────────────────────

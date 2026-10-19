@@ -4,19 +4,14 @@ import Link from 'next/link'
 import { registerForEvent } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import { useRecaptcha } from '@/lib/useRecaptcha'
-
-const SPECIALITATI = [
-  { value: 'cardiologie', label: 'Cardiologie' },
-  { value: 'chirurgie', label: 'Chirurgie cardiovasculară' },
-  { value: 'rezidenti', label: 'Rezidenți' },
-  { value: 'alta', label: 'Altă specialitate' },
-]
+import { useSpecialties } from '@/lib/useSpecialties'
 
 interface Props {
   eventSlug?: string
 }
 
 export function InscriereForm({ eventSlug = 'workshop-interactiv-tavi' }: Props) {
+  const specialties = useSpecialties()
   const { user } = useAuth()
   const { getToken } = useRecaptcha()
   const [formData, setFormData] = useState({
@@ -119,7 +114,7 @@ export function InscriereForm({ eventSlug = 'workshop-interactiv-tavi' }: Props)
         <div className="col-span-1 md:col-span-2">
           <select style={{ ...selectStyle, borderColor: errors.departament ? '#dc3545' : '#065ea6' }} value={formData.departament} onChange={e => setFormData(p => ({ ...p, departament: e.target.value }))}>
             <option value="">Specialitate</option>
-            {SPECIALITATI.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+            {specialties.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
           </select>
           {errors.departament && <span style={{ color: '#dc3545', fontSize: '0.8rem' }}>{errors.departament}</span>}
         </div>

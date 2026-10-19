@@ -54,13 +54,6 @@ const PROGRAM = [
   { ora: '18:30', titlu: 'CINĂ', items: [] },
 ]
 
-const SPECIALITATI = [
-  { value: 'cardiologie', label: 'Cardiologie' },
-  { value: 'chirurgie', label: 'Chirurgie cardiovasculară' },
-  { value: 'rezidenti', label: 'Rezidenți' },
-  { value: 'alta', label: 'Altă specialitate' },
-]
-
 // ─── Arrow icon ───────────────────────────────────────────────
 function ArrowIcon() {
   return (

@@ -30,6 +30,8 @@ export function FeaturedWorkshop({ event }: FeaturedWorkshopProps) {
   const imageUrl     = storageUrl(event?.image)
   const imageBig     = storageUrl(event?.image_big)
   const imageSmall   = storageUrl(event?.image_small)
+  const eventHref    = '/events/' + eventSlug
+  const registrationsClosed = !!event?.show_fully_booked_message
 
   return (
     <section className="relative z-10 w-full" >
@@ -93,7 +95,7 @@ export function FeaturedWorkshop({ event }: FeaturedWorkshopProps) {
 
           {/* IMAGES */}
           <div className="flex gap-2 mt-4 md:mt-0 h-full">
-            <div className="flex-1 relative h-full" style={{ background: '#fff', overflow: 'hidden' }}>
+            <Link href={eventHref} aria-label={event?.title ?? 'Vezi evenimentul'} className="flex-1 relative h-full block" style={{ background: '#fff', overflow: 'hidden' }}>
               <Image
                   src={imageUrl ?? '/device-tavi.png'}
                   alt={event?.title ?? ''}
@@ -102,20 +104,31 @@ export function FeaturedWorkshop({ event }: FeaturedWorkshopProps) {
                   quality={90}
                   unoptimized={!!imageUrl}
               />
-              </div>
+            </Link>
           </div>
 
         </div>
 
         {/* Buton */}
         <div className="flex justify-center mt-6">
-          <Link
-            href={'/events/' + eventSlug}
-            className="inline-flex items-center gap-2 text-white rounded-full px-8 py-2 transition-all hover:-translate-y-px"
-            style={{ background: '#065ea6', fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '13px' }}
-          >
-            Înscrie-te aici
-          </Link>
+          {registrationsClosed ? (
+            <span
+              aria-disabled="true"
+              title={event?.fully_booked_message ?? 'Înscrierile sunt închise'}
+              className="inline-flex items-center gap-2 text-white rounded-full px-8 py-2"
+              style={{ background: '#9ca3af', fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '13px', cursor: 'not-allowed' }}
+            >
+              Înscrie-te aici
+            </span>
+          ) : (
+            <Link
+              href={eventHref}
+              className="inline-flex items-center gap-2 text-white rounded-full px-8 py-2 transition-all hover:-translate-y-px"
+              style={{ background: '#065ea6', fontFamily: '"Roboto", sans-serif', fontWeight: 300, fontSize: '13px' }}
+            >
+              Înscrie-te aici
+            </Link>
+          )}
         </div>
 
       </div>
