@@ -39,6 +39,12 @@ export function EventsCarousel({ events, title = 'Vezi următoarele conferințe 
       }))
     : FALLBACK_ITEMS.map(i => ({ ...i, date: '' }))
 
+  // 1–2 slides: stretch to fill the row instead of scrolling (desktop)
+  const fit = slides.length <= 2
+  const slideClass = fit
+    ? `flex-shrink-0 md:flex-1 md:min-w-0 ${slides.length === 1 ? 'w-full' : 'w-[clamp(260px,75vw,338px)]'}`
+    : 'flex-shrink-0 md:mx-0 mx-auto w-[clamp(260px,75vw,338px)]'
+
   const scrollBy = (dir: 1 | -1) => {
     const isMobile = window.innerWidth < 768
     const w = isMobile ? SLIDE_WIDTH_MOBILE : SLIDE_WIDTH_DESKTOP
@@ -57,7 +63,7 @@ export function EventsCarousel({ events, title = 'Vezi următoarele conferințe 
         <button
           onClick={() => scrollBy(-1)}
           aria-label="Previous slide"
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center"
+          className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden ${fit ? '' : 'md:flex'} items-center justify-center`}
           style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -74,12 +80,12 @@ export function EventsCarousel({ events, title = 'Vezi următoarele conferințe 
           {slides.map((item, i) => (
             <div
               key={i}
-              className="flex-shrink-0 md:mx-0 mx-auto"
-style={{ width: 'clamp(260px, 75vw, 338px)', height: 'clamp(360px, 80vw, 462px)', scrollSnapAlign: 'start' }}
+              className={slideClass}
+              style={{ height: 'clamp(360px, 80vw, 462px)', scrollSnapAlign: 'start' }}
             >
               <div className="flex flex-col h-full" style={{ background: '#f5f5f5' }}>
                 <Link href={item.href} aria-label={item.title} className="relative overflow-hidden block" style={{ flex: '0 0 73%' }}>
-                  <Image src={item.image} alt={item.title} fill quality={75} className="object-cover object-top" sizes="338px" unoptimized={item.image.startsWith('http')} />
+                  <Image src={item.image} alt={item.title} fill quality={75} className="object-cover object-top" sizes={fit ? `(min-width: 768px) ${slides.length === 1 ? 960 : 465}px, 338px` : '338px'} unoptimized={item.image.startsWith('http')} />
                 </Link>
                 <div className="p-4" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
@@ -105,7 +111,7 @@ style={{ width: 'clamp(260px, 75vw, 338px)', height: 'clamp(360px, 80vw, 462px)'
         <button
           onClick={() => scrollBy(1)}
           aria-label="Next slide"
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center"
+          className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden ${fit ? '' : 'md:flex'} items-center justify-center`}
           style={{ width: '100px', height: '100px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer' }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -114,7 +120,7 @@ style={{ width: 'clamp(260px, 75vw, 338px)', height: 'clamp(360px, 80vw, 462px)'
         </button>
 
         {/* Butoane mobile */}
-        <div className="flex md:hidden justify-center items-center gap-4 mt-6">
+        <div className={`${slides.length === 1 ? 'hidden' : 'flex'} md:hidden justify-center items-center gap-4 mt-6`}>
           <button
             onClick={() => scrollBy(-1)}
             style={{ width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
