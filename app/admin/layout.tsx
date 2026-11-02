@@ -42,7 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside style={{ width: '240px', background: '#fff', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 100, transform: sidebarOpen ? 'translateX(0)' : undefined, transition: 'transform 0.3s' }} className="hidden md:flex flex-col">
         <div style={{ padding: '1.5rem 1.25rem', borderBottom: '1px solid #e5e7eb' }}>
   <Link href="/" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'center' }}>
-    <Image src="/logo.svg" alt="Monza Ares Academy" width={80} height={40} quality={90} className='mx-auto' />
+    <Image src="/logo.svg" alt="Monza Ares Academy" width={180} height={51} quality={90} className='mx-auto' />
     <div style={{ fontSize: '1.2rem', fontWeight: 300, color: '#6D6E71', letterSpacing: '0.05em', textTransform: 'uppercase', paddingTop:'10px' }}>Admin Panel</div>
   </Link>
 </div>

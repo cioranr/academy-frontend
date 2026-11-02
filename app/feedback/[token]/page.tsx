@@ -154,7 +154,7 @@ export default function FeedbackFormPage({ params }: { params: Promise<{ token: 
     <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: '"Roboto",sans-serif' }}>
       <div style={{ maxWidth: '680px', margin: '0 auto', padding: '2rem 1rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Image src="/logo.svg" alt="Monza Ares Academy" width={100} height={50} style={{ margin: '0 auto 1rem' }} />
+          <Image src="/logo.svg" alt="Monza Ares Academy" width={220} height={62} style={{ margin: '0 auto 1rem' }} />
         </div>
 
         <div style={{ background: '#fff', borderRadius: '16px', padding: '2rem', boxShadow: '0 1px 10px rgba(0,0,0,0.06)', marginBottom: '1.5rem' }}>

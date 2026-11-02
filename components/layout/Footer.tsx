@@ -29,7 +29,7 @@ export function Footer() {
         <div className="hidden md:flex items-end justify-center gap-0">
 
           <div className="items-start w-[280px] lg:w-[300px] flex-shrink-0 flex">
-            <Image src="/logo.svg" alt="Monza Ares Academy" width={80} height={40} quality={90} />
+            <Image src="/logo.svg" alt="Monza Ares Academy" width={180} height={51} quality={90} />
           </div>
 
           <div className="flex-1 max-w-[700px] flex flex-col justify-end">
@@ -71,7 +71,7 @@ export function Footer() {
 
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <Image src="/logo.svg" alt="Monza Ares Academy" width={70} height={35} quality={90} />
+            <Image src="/logo.svg" alt="Monza Ares Academy" width={140} height={40} quality={90} />
           </Link>
 
           {/* Dreapta: top bar + nav unul sub altul */}

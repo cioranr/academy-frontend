@@ -40,7 +40,7 @@ export function Navbar() {
             {/* Logo desktop */}
             <div className="hidden md:flex items-center w-[280px] lg:w-[300px] flex-shrink-0">
               <Link href="/">
-                <Image src="/logo.svg" alt="Monza Ares Academy" width={120} height={60} quality={90} />
+                <Image src="/logo.svg" alt="Monza Ares Academy" width={240} height={68} quality={90} />
               </Link>
             </div>
 
@@ -81,7 +81,7 @@ export function Navbar() {
 
                 {/* Logo mobile */}
                 <Link href="/" className="block md:hidden">
-                  <Image src="/logo.svg" alt="Monza Ares Academy" width={75} height={38} quality={90} />
+                  <Image src="/logo.svg" alt="Monza Ares Academy" width={150} height={43} quality={90} />
                 </Link>
 
                 {/* Burger */}
@@ -141,7 +141,7 @@ export function Navbar() {
           {/* Logo in meniu — stanga sus */}
           <div style={{ position: 'absolute', top: '20px', left: '20px' }}>
             <Link href="/" onClick={() => setMenuOpen(false)}>
-              <Image src="/logo.svg" alt="Monza Ares Academy" width={70} height={35} quality={90} />
+              <Image src="/logo.svg" alt="Monza Ares Academy" width={140} height={40} quality={90} />
             </Link>
           </div>
 
